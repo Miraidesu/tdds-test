@@ -1,3 +1,5 @@
+"use client"
+
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -5,8 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar } from "@/components/ui/calendar"
 import { Label } from "@/components/ui/label"
 
-export default function Scheduling() {
-  const [date, setDate] = useState("")
+export default function Component() {
+  const [date, setDate] = useState(Date())
   const [doctor, setDoctor] = useState("")
   const [timeSlot, setTimeSlot] = useState("")
 
@@ -17,12 +19,13 @@ export default function Scheduling() {
     alert("Appointment scheduled successfully!")
   }
 
-  const doctorr = [
-    "Dr. Smith","Dr. dasda","Dr. Williams"
+  const timeSlots = [
+    "09:00 AM", "10:00 AM", "11:00 AM", "12:00 PM",
+    "02:00 PM", "03:00 PM", "04:00 PM", "05:00 PM"
   ]
 
   return (
-    <Card className="w-full max-w-md mx-auto">
+    <Card className="w-[325px] max-w-md mx-auto">
       <CardHeader>
         <CardTitle>Schedule an Appointment</CardTitle>
         <CardDescription>Book an hour with one of our medical professionals.</CardDescription>
@@ -37,9 +40,9 @@ export default function Scheduling() {
                   <SelectValue placeholder="Choose a doctor" />
                 </SelectTrigger>
                 <SelectContent>
-                  {doctorr.map((doctor) => (
-					<SelectItem key={doctor} value={doctor}>{doctor}</SelectItem>
-				  ))}
+                  <SelectItem value="dr-smith">Dr. Smith</SelectItem>
+                  <SelectItem value="dr-johnson">Dr. Johnson</SelectItem>
+                  <SelectItem value="dr-williams">Dr. Williams</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -51,10 +54,25 @@ export default function Scheduling() {
                 selected={date}
                 onSelect={setDate}
                 className="rounded-md border"
-                disabled={(date) => date < new Date() || date > new Date(new Date().setMonth(new Date().getMonth() + 2))}
+                disabled={(date) => date < new Date() || date > new Date(new Date().setMonth(new Date().getMonth() + 1))}
               />
             </div>
 
+            <div className="space-y-2">
+              <Label htmlFor="time-slot">Select a Time Slot</Label>
+              <Select onValueChange={setTimeSlot} required>
+                <SelectTrigger id="time-slot">
+                  <SelectValue placeholder="Choose a time slot" />
+                </SelectTrigger>
+                <SelectContent>
+                  {timeSlots.map((slot) => (
+                    <SelectItem key={slot} value={slot}>
+                      {slot}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </form>
       </CardContent>
