@@ -24,6 +24,10 @@ export default function Component() {
     "02:00 PM", "03:00 PM", "04:00 PM", "05:00 PM"
   ]
 
+  const medicList = [
+    "Dr. Smith", "Dr. Johnson", "Dr. Williams"
+  ]
+
   return (
     <Card className="w-[325px] max-w-md mx-auto">
       <CardHeader>
@@ -40,9 +44,11 @@ export default function Component() {
                   <SelectValue placeholder="Choose a doctor" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="dr-smith">Dr. Smith</SelectItem>
-                  <SelectItem value="dr-johnson">Dr. Johnson</SelectItem>
-                  <SelectItem value="dr-williams">Dr. Williams</SelectItem>
+                  {medicList.map((medic) => (
+                    <SelectItem key={medic} value={medic}>
+                      {medic}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -54,7 +60,7 @@ export default function Component() {
                 selected={date}
                 onSelect={setDate}
                 className="rounded-md border"
-                disabled={(date) => date < new Date() || date > new Date(new Date().setMonth(new Date().getMonth() + 1))}
+                disabled={true}
               />
             </div>
 
