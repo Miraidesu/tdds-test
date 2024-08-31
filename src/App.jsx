@@ -1,10 +1,11 @@
 
-import Scheduling from "./pages/scheduling"
+import CreateProfile from "./pages/createProfile"
+import Scheduling from "./pages/Scheduling"
 
 function App() {
   return (
     <div>
-      <Scheduling />
+      <CreateProfile />
     </div>
   ) 
 }
