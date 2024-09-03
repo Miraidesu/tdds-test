@@ -17,13 +17,19 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import { Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue } from "@/components/ui/select"
+import { PlusCircle, Pencil, Trash2, Plus, Search } from "lucide-react"
 
 export default function CreateProfile() {
   const [profiles, setProfiles] = useState([
-    { id: 1, name: "John Doe", email: "john@example.com", role: "Developer" },
-    { id: 2, name: "Jane Smith", email: "jane@example.com", role: "Designer" },
-    { id: 3, name: "Alice Johnson", email: "alice@example.com", role: "Manager" },
-    { id: 4, name: "Bob Williams", email: "bob@example.com", role: "Tester" },
+    { id: 1, name: "John Doe", email: "john@example.com", role: "Medico" },
+    { id: 2, name: "Jane Smith", email: "jane@example.com", role: "Contador" },
+    { id: 3, name: "Alice Johnson", email: "alice@example.com", role: "Secretaria" },
+    { id: 4, name: "Bob Williams", email: "bob@example.com", role: "Desarrollador" },
   ])
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
@@ -67,11 +73,13 @@ export default function CreateProfile() {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Profile Management</h1>
+      <h1 className="text-2xl font-bold mb-4">Gestion de perfiles</h1>
       <div className="flex justify-between items-center mb-4">
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button>Add New Profile
+            <Button>
+              <PlusCircle className="h-4 w-4 mr-2"/>
+              Crear nuevo perfil
             </Button>
           </DialogTrigger>
           <DialogContent>
@@ -80,7 +88,7 @@ export default function CreateProfile() {
             </DialogHeader>
             <form className="space-y-4">
               <div>
-                <Label htmlFor="name">Name</Label>
+                <Label htmlFor="name">Nombre</Label>
                 <Input
                   id="name"
                   name="name"
@@ -97,21 +105,25 @@ export default function CreateProfile() {
                 />
               </div>
               <div>
-                <Label htmlFor="role">Role</Label>
-                <Input
-                  id="role"
-                  name="role"
-                  required
-                />
+                <Label htmlFor="role">Rol</Label>
+                <Select id="role">
+                    <SelectTrigger className="col-span-5" id="month">
+                      <SelectValue/>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem>Ejemplo</SelectItem>
+                    </SelectContent>
+                  </Select>
               </div>
-              <Button type="submit"> Profile</Button>
+              <Button type="submit">Crear</Button>
             </form>
           </DialogContent>
         </Dialog>
         <div className="relative">
+          <Search className="absolute top-1/2 left-2 transform h-4 w-4 -translate-y-1/2 text-gray-500"/>
           <Input
             type="text"
-            placeholder="Search by name"
+            placeholder="Buscar por nombre"
             value={searchTerm}
 			onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-8 w-64"
@@ -121,10 +133,10 @@ export default function CreateProfile() {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Name</TableHead>
+            <TableHead>Nombre</TableHead>
             <TableHead>Email</TableHead>
-            <TableHead>Role</TableHead>
-            <TableHead>Actions</TableHead>
+            <TableHead>Rol</TableHead>
+            <TableHead>Opciones</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -138,12 +150,14 @@ export default function CreateProfile() {
                   variant="ghost"
                   size="icon"
                 >
+                  <Pencil className="h-4 w-4"/>
                   <span className="sr-only">Edit</span>
                 </Button>
                 <Button
                   variant="ghost"
                   size="icon"
                 >
+                  <Trash2 className="h-4 w-4"/>
                   <span className="sr-only">Delete</span>
                 </Button>
               </TableCell>
