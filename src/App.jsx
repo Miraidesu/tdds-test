@@ -10,7 +10,7 @@ import UserScheduling from "./pages/UserScheduling"
 function App() {
   return (
     <div>
-      <Info />
+      <Dashboard />
     </div>
   ) 
 }
