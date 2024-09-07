@@ -18,13 +18,13 @@ export default function Info() {
 			<AccordionItem className="m-2 border-2 rounded-md px-6"  value="item-1">
 				<AccordionTrigger  className="font-bold">Pregunta</AccordionTrigger>
 				<AccordionContent>
-					Wena choro
+					Hola
 				</AccordionContent>
 			</AccordionItem>
 			<AccordionItem className="m-2 border-2 rounded-md px-6"  value="item-2">
 				<AccordionTrigger className="font-bold">Pregunta</AccordionTrigger>
 				<AccordionContent>
-					ola mundo
+					Hola Mundo!
 				</AccordionContent>
 			</AccordionItem>
 		</Accordion>
