@@ -18,6 +18,13 @@ import { Label } from "@/components/ui/label"
 
 export default function UserScheduling() {
   const [date, setDate] = useState(Date())
+  const [canSubmit, setCanSubmit] = useState(true)
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    console.log("Appointment scheduled:", { service, doctor, date, timeSlot })
+    alert("Appointment scheduled successfully!")
+  }
 
   return (
     <div className="bg-slate-950 max-h-svh">
@@ -36,9 +43,16 @@ export default function UserScheduling() {
                 <Input
                   id="rut"
                   placeholder="12345678"
+                  maxLength={8}
                   className="col-span-2"/>
                 <Input
                   id="dig"
+                  maxLength={1}
+                  onKeyDown={(e) => {
+                    if (e.target.value !== "K" && e.target.value !== "k") {
+                      e.target.blur()
+                    }
+                  }}
                   placeholder="K"/>
               </div>
 
@@ -88,7 +102,7 @@ export default function UserScheduling() {
           </form>
         </CardContent>
         <CardFooter>
-          <Button className="w-full">Registrarse</Button>
+          <Button className="w-full" disabled={canSubmit} onClick={handleSubmit} >Registrarse</Button>
         </CardFooter>
       </Card>
     </div>
