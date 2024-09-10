@@ -110,7 +110,7 @@ export default function UserScheduling() {
           </form>
         </CardContent>
         <CardFooter>
-          <Button className="w-full" disabled={false} onClick={handleSubmit}>Reservar</Button>
+          <Button className="w-full" disabled={true} onClick={handleSubmit}>Reservar</Button>
         </CardFooter>
       </Card>
     </div>
