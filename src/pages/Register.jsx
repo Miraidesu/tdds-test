@@ -17,11 +17,16 @@ import { Select,
   SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import Calendar  from "react-calendar";
+import { CalendarArrowDown, CalendarCheck, CalendarDays, CalendarRange } from "lucide-react";
+
+
+
 
 const userSchema = z.object({
   rut: z.object({
     rutNum: z.string()
-      .min(1, "El RUT es requerido")
+      .min(7, "El RUT debe tener minimo 7 digitos")
       .max(8, "El RUT debe tener máximo 8 digitos")
       .regex(/^[0-9]+$/, "El RUT debe ser un número"),
     rutDig: z.string()
@@ -38,14 +43,16 @@ const userSchema = z.object({
     .min(1, "El nombre es requerido"),
   surname: z.string()
     .min(1, "El apellido es requerido"),
-  birthday: z.date(),
+  birthday: z.string()
+    .min(1, "Ingrese su fecha de nacimiento"),
   email: z.string()
     .min(1, "El correo es requerido")
-    .email("El correo ingresado es invalido"),
+    .regex(/^[a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)*@[a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)*[.][a-zA-Z]{2,5}$/, 
+      "El correo ingresado es inválido"),
 });
 
 export default function UserScheduling() {
-  const [date, setDate] = useState(Date())
+  const [date, setDate] = useState("")
   const [canSubmit, setCanSubmit] = useState(true)
 
   const { register, handleSubmit, formState: { errors } } = useForm({
@@ -55,6 +62,33 @@ export default function UserScheduling() {
   const onSubmit = (data) => {
     console.log("Form Data:", data);
     alert('Form is valid and submitted!');
+  };
+
+  const handleDateChange = (event) => {
+    const { value } = event.target;
+    // Reemplazamos cualquier carácter que no sea un número
+    const onlyNumbers = value.replace(/\D/g, '');
+
+    // Formatear la fecha
+    let formattedDate = '';
+
+if (onlyNumbers.length >= 2) {
+      formattedDate += onlyNumbers.substring(0, 2) + '/'; // Día
+    } else if (onlyNumbers.length > 0) {
+      formattedDate += onlyNumbers.substring(0, 2); // Agrega solo el día si tiene menos de 2 dígitos
+    }
+    
+    if (onlyNumbers.length >= 4) {
+      formattedDate += onlyNumbers.substring(2, 4) + '/'; // Mes
+    } else if (onlyNumbers.length > 2) {
+      formattedDate += onlyNumbers.substring(2, 4); // Agrega solo el mes si tiene menos de 2 dígitos
+    }
+
+    if (onlyNumbers.length > 4) {
+      formattedDate += onlyNumbers.substring(4, 8); // Año
+    }
+
+    setDate(formattedDate);
   };
 
 
@@ -69,64 +103,71 @@ export default function UserScheduling() {
         <CardContent>
           
             <div className="space-y-4">
-              <Label htmlFor="rut">
-                RUT
-              </Label>
-              <div className="grid grid-cols-5 gap-4">
+              <div>
+                <Label htmlFor="rut">
+                  RUT
+                </Label>
+                <div className="grid grid-cols-5 gap-4">
                 <Input
-                  {...register('rutNum')}
+                  {...register('rut.rutNum')} 
                   placeholder="12345678"
                   className="col-span-2"/>
                 <Input
-                  {...register('rutDig')}
+                  {...register('rut.rutDig')} 
                   placeholder="K"/>
-                {errors.rut && (
-                  <p style={{ color: 'red' }}>{errors.rut.message}</p>
+              </div>
+              <div>
+                {errors.rut?.rutNum && (
+                <p style={{ color: 'red' }}>{errors.rut.rutNum.message}</p>
                 )}
+                {errors.rut?.rutDig && (
+                  <p style={{ color: 'red' }}>{errors.rut.rutDig.message}</p>
+                )}
+              </div>
+              
+              
+
+
               </div>
               
           
               <div className="space-y-2">
                 <Label htmlFor="name">Nombre(s)</Label>
                 <Input {...register('name')} placeholder="Nombre"/>
+                {errors.name && (
+                <p style={{ color: 'red' }}>{errors.name.message}</p>
+              )}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="lastname">Apellido(s)</Label>
                 <Input {...register('surname')} placeholder="Apellido"/>
+                {errors.surname && (
+                <p style={{ color: 'red' }}>{errors.surname.message}</p>
+              )}
               </div>
-
+              
               <div className="space-y-2">
                 <Label htmlFor="birthday">Fecha de nacimiento</Label>
                 <div className="grid grid-cols-10 gap-4">
-                  <Input className="col-span-2" placeholder="31"/>
-                  <Select >
-                    <SelectTrigger className="col-span-5" id="month">
-                      <SelectValue placeholder="Enero" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="enero">Enero</SelectItem>
-                      <SelectItem value="febrero">Febrero</SelectItem>
-                      <SelectItem value="marzo">Marzo</SelectItem>
-                      <SelectItem value="abril">Abril</SelectItem>
-                      <SelectItem value="mayo">Mayo</SelectItem>
-                      <SelectItem value="junio">Junio</SelectItem>
-                      <SelectItem value="julio">Julio</SelectItem>
-                      <SelectItem value="agosto">Agosto</SelectItem>
-                      <SelectItem value="septiembre">Septiembre</SelectItem>
-                      <SelectItem value="octubre">Octubre</SelectItem>
-                      <SelectItem value="noviembre">Noviembre</SelectItem>
-                      <SelectItem value="diciembre">Diciembre</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Input className="col-span-3" placeholder="2024"/>
+                  <Input {...register('birthday')} className="col-span-10" placeholder="DD/MM/AAAA" value={date}
+                  onChange={handleDateChange}/>
+                </div>
+                <div>
+                  {errors.birthday && (
+                      <p style={{ color: 'red' }}>{errors.birthday.message}</p>
+                    )}
                 </div>
               </div>
 
               <div className="space-y-2">
               <Label htmlFor="email">Correo electronico</Label>
-              <Input placeholder="ejemplo@mail.cl"/>
+              <Input {...register('email')} placeholder="ejemplo@mail.cl"/>
+              {errors.email && (
+                <p style={{ color: 'red' }}>{errors.email.message}</p>
+              )}
               </div>
+              
 
             </div>
           </CardContent>
