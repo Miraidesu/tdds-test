@@ -2,7 +2,6 @@ import { useState } from "react"
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-
 import { Button } from "@/components/ui/button"
 import { Card, 
   CardContent, 
@@ -10,35 +9,22 @@ import { Card,
   CardFooter, 
   CardHeader, 
   CardTitle } from "@/components/ui/card"
-import { Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import Calendar  from "react-calendar";
-import { CalendarArrowDown, CalendarCheck, CalendarDays, CalendarRange } from "lucide-react";
 
 
 
 
 const userSchema = z.object({
-  rut: z.object({
-    rutNum: z.string()
-      .min(7, "El RUT debe tener minimo 7 digitos")
-      .max(8, "El RUT debe tener máximo 8 digitos")
-      .regex(/^[0-9]+$/, "El RUT debe ser un número"),
-    rutDig: z.string()
-      .min(1, "El digito verificador es requerido")
-      .max(1, "El digito verificador debe tener solo un caracter")
-      .regex(/^[0-9kK]+$/, "El digito verificador debe ser un número o K"),
-  }).refine((data) => {
-    return data.rutNum.length > 0 && /^[0-9]+$/.test(data.rutNum) && /^[0-9kK]$/.test(data.rutDig);
-  }, {
-    message: "El RUT o el dígito verificador son inválidos",
-    path: ["rut"], // Path to trigger error on
-  }),
+  rutNum: z.string()
+    .min(1, "El RUT es requerido")
+    .regex(/^[0-9]+$/, "El RUT debe ser numérico")
+    .min(7, "El RUT debe tener minimo 7 digitos")
+    .max(8, "El RUT debe tener máximo 8 digitos"),
+  rutDig: z.string()
+    .min(1, "El digito verificador es requerido")
+    .regex(/^[0-9kK]+$/, "El digito verificador debe ser un número o K")
+    .max(1, "El digito verificador debe tener solo un caracter"),
   name: z.string()
     .min(1, "El nombre es requerido"),
   surname: z.string()
@@ -49,7 +35,7 @@ const userSchema = z.object({
     .min(1, "El correo es requerido")
     .regex(/^[a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)*@[a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)*[.][a-zA-Z]{2,5}$/, 
       "El correo ingresado es inválido"),
-});
+  });
 
 export default function UserScheduling() {
   const [date, setDate] = useState("")
@@ -101,75 +87,70 @@ if (onlyNumbers.length >= 2) {
           <CardDescription>Ingrese sus datos para crear una cuenta</CardDescription>
         </CardHeader>
         <CardContent>
-          
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="rut">
-                  RUT
-                </Label>
-                <div className="grid grid-cols-5 gap-4">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="rut">
+                RUT
+              </Label>
+              <div className="grid grid-cols-5 gap-4">
                 <Input
-                  {...register('rut.rutNum')} 
+                  {...register('rutNum')} 
                   placeholder="12345678"
                   className="col-span-2"/>
                 <Input
-                  {...register('rut.rutDig')} 
+                  {...register('rutDig')} 
                   placeholder="K"/>
               </div>
-              <div>
-                {errors.rut?.rutNum && (
-                <p style={{ color: 'red' }}>{errors.rut.rutNum.message}</p>
-                )}
-                {errors.rut?.rutDig && (
-                  <p style={{ color: 'red' }}>{errors.rut.rutDig.message}</p>
-                )}
-              </div>
-              
-              
+            <div>
 
-
-              </div>
-              
-          
-              <div className="space-y-2">
-                <Label htmlFor="name">Nombre(s)</Label>
-                <Input {...register('name')} placeholder="Nombre"/>
-                {errors.name && (
-                <p style={{ color: 'red' }}>{errors.name.message}</p>
-              )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="lastname">Apellido(s)</Label>
-                <Input {...register('surname')} placeholder="Apellido"/>
-                {errors.surname && (
-                <p style={{ color: 'red' }}>{errors.surname.message}</p>
-              )}
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="birthday">Fecha de nacimiento</Label>
-                <div className="grid grid-cols-10 gap-4">
-                  <Input {...register('birthday')} className="col-span-10" placeholder="DD/MM/AAAA" value={date}
-                  onChange={handleDateChange}/>
-                </div>
-                <div>
-                  {errors.birthday && (
-                      <p style={{ color: 'red' }}>{errors.birthday.message}</p>
-                    )}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-              <Label htmlFor="email">Correo electronico</Label>
-              <Input {...register('email')} placeholder="ejemplo@mail.cl"/>
-              {errors.email && (
-                <p style={{ color: 'red' }}>{errors.email.message}</p>
-              )}
-              </div>
-              
-
+            {errors.rutNum ? (
+              <p className="font-semibold text-red-500">{errors.rutNum.message}</p>
+            ) : errors.rutDig ? (
+              <p className="font-semibold text-red-500">{errors.rutDig.message}</p>
+            ) : null}
             </div>
+          </div>
+          
+      
+          <div className="space-y-2">
+            <Label htmlFor="name">Nombre(s)</Label>
+            <Input {...register('name')} placeholder="Nombre"/>
+            {errors.name && (
+              <p className="font-semibold text-red-500">{errors.name.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="lastname">Apellido(s)</Label>
+            <Input {...register('surname')} placeholder="Apellido"/>
+            {errors.surname && (
+            <p className="font-semibold text-red-500">{errors.surname.message}</p>
+          )}
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="birthday">Fecha de nacimiento</Label>
+            <div className="grid grid-cols-10 gap-4">
+              <Input {...register('birthday')} className="col-span-10" placeholder="DD/MM/AAAA" value={date}
+              onChange={handleDateChange}/>
+            </div>
+            <div>
+              {errors.birthday && (
+                  <p className="font-semibold text-red-500">{errors.birthday.message}</p>
+                )}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+          <Label htmlFor="email">Correo electronico</Label>
+          <Input {...register('email')} placeholder="ejemplo@mail.cl"/>
+          {errors.email && (
+            <p className="font-semibold text-red-500">{errors.email.message}</p>
+          )}
+          </div>
+          
+
+          </div>
           </CardContent>
           <CardFooter>
             <Button className="w-full" type="submit">Registrarse</Button>
