@@ -12,9 +12,9 @@ import { Card,
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
+// aqui
 
-
-
+// aquí agregamos la validación para que las contraseñas coincidan
 const userSchema = z.object({
   rutNum: z.string()
     .min(1, "El RUT es requerido")
@@ -31,16 +31,23 @@ const userSchema = z.object({
     .min(1, "El apellido es requerido"),
   birthday: z.string()
     .min(1, "Ingrese su fecha de nacimiento"),
+  direccion: z.string()
+    .min(1, "Ingrese su direccion"),
   email: z.string()
     .min(1, "El correo es requerido")
     .regex(/^[a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)*@[a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)*[.][a-zA-Z]{2,5}$/, 
       "El correo ingresado es inválido"),
-  });
+  password: z.string()
+    .min(6, "La contraseña debe tener entre 6 y 10 caracteres")
+    .max(10, "La contraseña debe tener entre 6 y 10 caracteres"),
+  confirmPassword: z.string().min(1, "Debe confirmar su contraseña")
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Las contraseñas no coinciden",
+  path: ["confirmPassword"], // Muestra el error en el campo de confirmación
+});
 
 export default function UserScheduling() {
   const [date, setDate] = useState("")
-  const [canSubmit, setCanSubmit] = useState(true)
-
   const { register, handleSubmit, formState: { errors } } = useForm({
     resolver: zodResolver(userSchema),
   });
@@ -52,22 +59,19 @@ export default function UserScheduling() {
 
   const handleDateChange = (event) => {
     const { value } = event.target;
-    // Reemplazamos cualquier carácter que no sea un número
     const onlyNumbers = value.replace(/\D/g, '');
-
-    // Formatear la fecha
     let formattedDate = '';
 
-if (onlyNumbers.length >= 2) {
+    if (onlyNumbers.length >= 2) {
       formattedDate += onlyNumbers.substring(0, 2) + '/'; // Día
     } else if (onlyNumbers.length > 0) {
-      formattedDate += onlyNumbers.substring(0, 2); // Agrega solo el día si tiene menos de 2 dígitos
+      formattedDate += onlyNumbers.substring(0, 2);
     }
     
     if (onlyNumbers.length >= 4) {
       formattedDate += onlyNumbers.substring(2, 4) + '/'; // Mes
     } else if (onlyNumbers.length > 2) {
-      formattedDate += onlyNumbers.substring(2, 4); // Agrega solo el mes si tiene menos de 2 dígitos
+      formattedDate += onlyNumbers.substring(2, 4);
     }
 
     if (onlyNumbers.length > 4) {
@@ -76,7 +80,6 @@ if (onlyNumbers.length >= 2) {
 
     setDate(formattedDate);
   };
-
 
   return (
     <div className="bg-slate-950 max-h-svh">
@@ -89,9 +92,7 @@ if (onlyNumbers.length >= 2) {
         <CardContent>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="rut">
-                RUT
-              </Label>
+              <Label htmlFor="rut">RUT</Label>
               <div className="grid grid-cols-5 gap-4">
                 <Input
                   {...register('rutNum')} 
@@ -102,16 +103,14 @@ if (onlyNumbers.length >= 2) {
                   placeholder="K"/>
               </div>
             <div>
-
-            {errors.rutNum ? (
-              <p className="font-semibold text-red-500">{errors.rutNum.message}</p>
-            ) : errors.rutDig ? (
-              <p className="font-semibold text-red-500">{errors.rutDig.message}</p>
-            ) : null}
+              {errors.rutNum ? (
+                <p className="font-semibold text-red-500">{errors.rutNum.message}</p>
+              ) : errors.rutDig ? (
+                <p className="font-semibold text-red-500">{errors.rutDig.message}</p>
+              ) : null}
             </div>
           </div>
           
-      
           <div className="space-y-2">
             <Label htmlFor="name">Nombre(s)</Label>
             <Input {...register('name')} placeholder="Nombre"/>
@@ -124,8 +123,8 @@ if (onlyNumbers.length >= 2) {
             <Label htmlFor="lastname">Apellido(s)</Label>
             <Input {...register('surname')} placeholder="Apellido"/>
             {errors.surname && (
-            <p className="font-semibold text-red-500">{errors.surname.message}</p>
-          )}
+              <p className="font-semibold text-red-500">{errors.surname.message}</p>
+            )}
           </div>
           
           <div className="space-y-2">
@@ -134,29 +133,49 @@ if (onlyNumbers.length >= 2) {
               <Input {...register('birthday')} className="col-span-10" placeholder="DD/MM/AAAA" value={date}
               onChange={handleDateChange}/>
             </div>
-            <div>
-              {errors.birthday && (
-                  <p className="font-semibold text-red-500">{errors.birthday.message}</p>
-                )}
-            </div>
+            {errors.birthday && (
+              <p className="font-semibold text-red-500">{errors.birthday.message}</p>
+            )}
           </div>
 
           <div className="space-y-2">
-          <Label htmlFor="email">Correo electronico</Label>
-          <Input {...register('email')} placeholder="ejemplo@mail.cl"/>
-          {errors.email && (
-            <p className="font-semibold text-red-500">{errors.email.message}</p>
-          )}
+            <Label htmlFor="email">Correo electronico</Label>
+            <Input {...register('email')} placeholder="ejemplo@mail.cl"/>
+            {errors.email && (
+              <p className="font-semibold text-red-500">{errors.email.message}</p>
+            )}
           </div>
-          
 
+          <div className="space-y-2">
+            <Label htmlFor="direccion">Dirección</Label>
+            <Input {...register('direccion')} placeholder="Macul 1234"/>
+            {errors.direccion && (
+              <p className="font-semibold text-red-500">{errors.direccion.message}</p>
+            )}
           </div>
-          </CardContent>
-          <CardFooter>
-            <Button className="w-full" type="submit">Registrarse</Button>
-          </CardFooter>
-        </form>
-      </Card>
-    </div>
-  )
+
+          <div className="space-y-2">
+            <Label>Contraseña</Label>
+            <Input type="password" {...register('password')} placeholder="Contraseña"/>
+            {errors.password && (
+              <p className="font-semibold text-red-500">{errors.password.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label>Confirmar Contraseña</Label>
+            <Input type="password" {...register('confirmPassword')} placeholder="Confirmar contraseña"/>
+            {errors.confirmPassword && (
+              <p className="font-semibold text-red-500">{errors.confirmPassword.message}</p>
+            )}
+          </div>
+        </div>
+        </CardContent>
+        <CardFooter>
+          <Button className="w-full" type="submit">Registrarse</Button>
+        </CardFooter>
+      </form>
+    </Card>
+  </div>
+  );
 }
