@@ -84,76 +84,80 @@ export default function UserScheduling() {
 
   return (
     <div className="bg-slate-950">
-      <Card className="w-[325px] max-w-md mx-auto">
+      <Card className="w-auto max-w-md mx-auto">
       <form onSubmit={handleSubmit(onSubmit)}>
         <CardHeader>
           <CardTitle>Registro</CardTitle>
           <CardDescription>Ingrese sus datos para crear una cuenta</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4"> 
-            <div className="space-y-2">
-              <Label htmlFor="rut">RUT</Label>
-              <div className="grid grid-cols-5 gap-4">
-                <Input
-                  {...register('rutNum')} 
-                  placeholder="12345678"
-                  className="col-span-2"/>
-                <Input
-                  {...register('rutDig')} 
-                  placeholder="K"/>
+        <main className="flex flex-col space-y-4">
+          <article className="flex">
+            <section className="flex-1 mr-3">
+              <div className="space-y-2">
+                <Label htmlFor="rut">RUT</Label>
+                <div className="flex">
+                  <Input
+                    {...register('rutNum')} 
+                    placeholder="12345678"
+                    />
+                  <Input
+                    {...register('rutDig')} 
+                    placeholder="K"
+                    className="w-10"/>
+                </div>
+                {errors.rutNum ? (
+                  <ErrorMsg>{errors.rutNum.message}</ErrorMsg>
+                ) : errors.rutDig ? (
+                  <ErrorMsg>{errors.rutDig.message}</ErrorMsg>
+                ) : null}
               </div>
-            <div>
-              {errors.rutNum ? (
-                <ErrorMsg>{errors.rutNum.message}</ErrorMsg>
-              ) : errors.rutDig ? (
-                <ErrorMsg>{errors.rutDig.message}</ErrorMsg>
-              ) : null}
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="name">Nombre(s)</Label>
-            <Input {...register('name')} placeholder="Nombre"/>
-            {errors.name && (
-              <ErrorMsg>{errors.name.message}</ErrorMsg>
-            )}
-          </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="name">Nombre(s)</Label>
+                <Input {...register('name')} placeholder="Nombre"/>
+                {errors.name && (
+                  <ErrorMsg>{errors.name.message}</ErrorMsg>
+                )}
+              </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="lastname">Apellido(s)</Label>
-            <Input {...register('surname')} placeholder="Apellido"/>
-            {errors.surname && (
-              <ErrorMsg>{errors.surname.message}</ErrorMsg>
-            )}
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="birthday">Fecha de nacimiento</Label>
-            <div className="grid grid-cols-10 gap-4">
-              <Input {...register('birthday')} className="col-span-10" placeholder="DD/MM/AAAA" value={date}
-              onChange={handleDateChange}/>
-            </div>
-            {errors.birthday && (
-             <ErrorMsg>{errors.birthday.message}</ErrorMsg>
-            )}
-          </div>
+              <div className="space-y-2">
+                <Label htmlFor="lastname">Apellido(s)</Label>
+                <Input {...register('surname')} placeholder="Apellido"/>
+                {errors.surname && (
+                  <ErrorMsg>{errors.surname.message}</ErrorMsg>
+                )}
+              </div>
+            </section>
 
-          <div className="space-y-2">
-            <Label htmlFor="email">Correo electronico</Label>
-            <Input {...register('email')} placeholder="ejemplo@mail.cl"/>
-            {errors.email && (
-              <ErrorMsg>{errors.email.message}</ErrorMsg>
-            )}
-          </div>
+            <section className="flex-1 ml-3">
+              <div className="space-y-2">
+                <Label htmlFor="birthday">Fecha de nacimiento</Label>
+                <Input {...register('birthday')} className="col-span-10" placeholder="DD/MM/AAAA" value={date}
+                onChange={handleDateChange}/>
+                
+                {errors.birthday && (
+                <ErrorMsg>{errors.birthday.message}</ErrorMsg>
+                )}
+              </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="direccion">Dirección</Label>
-            <Input {...register('direccion')} placeholder="Macul 1234"/>
-            {errors.direccion && (
-              <ErrorMsg>{errors.direccion.message}</ErrorMsg>
-            )}
-          </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Correo electronico</Label>
+                <Input {...register('email')} placeholder="ejemplo@mail.cl"/>
+                {errors.email && (
+                  <ErrorMsg>{errors.email.message}</ErrorMsg>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="direccion">Dirección</Label>
+                <Input {...register('direccion')} placeholder="Macul 1234"/>
+                {errors.direccion && (
+                  <ErrorMsg>{errors.direccion.message}</ErrorMsg>
+                )}
+              </div>
+            </section>
+          </article>
 
           <div className="space-y-2">
             <Label>Contraseña</Label>
@@ -170,11 +174,10 @@ export default function UserScheduling() {
               <ErrorMsg>{errors.confirmPassword.message}</ErrorMsg>
             )}
           </div>
-        </div>
+
+          <Button type="submit">Registrarse</Button>
+        </main>
         </CardContent>
-        <CardFooter>
-          <Button className="w-full" type="submit">Registrarse</Button>
-        </CardFooter>
       </form>
     </Card>
   </div>
