@@ -25,9 +25,11 @@ const userSchema = z.object({
     .regex(/^[0-9kK]+$/, "El digito verificador debe ser un número o K")
     .max(1, "El digito verificador debe tener solo un caracter"),
   name: z.string()
-    .min(1, "El nombre es requerido"),
+    .min(1, "El nombre es requerido")
+    .regex(/^[a-zA-Z\s]+$/, "El nombre debe contener solo letras"),
   surname: z.string()
-    .min(1, "El apellido es requerido"),
+    .min(1, "El apellido es requerido")
+    .regex(/^[a-zA-Z\s]+$/, "El apellido debe contener solo letras"),
   birthday: z.string()
     .min(1, "Ingrese su fecha de nacimiento"),
   direccion: z.string()
@@ -81,7 +83,7 @@ export default function UserScheduling() {
   };
 
   return (
-    <div className="bg-slate-950 max-h-svh">
+    <div className="bg-slate-950">
       <Card className="w-[325px] max-w-md mx-auto">
       <form onSubmit={handleSubmit(onSubmit)}>
         <CardHeader>
@@ -89,7 +91,7 @@ export default function UserScheduling() {
           <CardDescription>Ingrese sus datos para crear una cuenta</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <div className="space-y-4"> 
             <div className="space-y-2">
               <Label htmlFor="rut">RUT</Label>
               <div className="grid grid-cols-5 gap-4">
