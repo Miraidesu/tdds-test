@@ -11,8 +11,7 @@ import { Card,
   CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-
-// aqui
+import ErrorMsg from "@/components/error-msg"
 
 // aquí agregamos la validación para que las contraseñas coincidan
 const userSchema = z.object({
@@ -104,9 +103,9 @@ export default function UserScheduling() {
               </div>
             <div>
               {errors.rutNum ? (
-                <p className="font-semibold text-red-500">{errors.rutNum.message}</p>
+                <ErrorMsg>{errors.rutNum.message}</ErrorMsg>
               ) : errors.rutDig ? (
-                <p className="font-semibold text-red-500">{errors.rutDig.message}</p>
+                <ErrorMsg>{errors.rutDig.message}</ErrorMsg>
               ) : null}
             </div>
           </div>
@@ -115,7 +114,7 @@ export default function UserScheduling() {
             <Label htmlFor="name">Nombre(s)</Label>
             <Input {...register('name')} placeholder="Nombre"/>
             {errors.name && (
-              <p className="font-semibold text-red-500">{errors.name.message}</p>
+              <ErrorMsg>{errors.name.message}</ErrorMsg>
             )}
           </div>
 
@@ -123,7 +122,7 @@ export default function UserScheduling() {
             <Label htmlFor="lastname">Apellido(s)</Label>
             <Input {...register('surname')} placeholder="Apellido"/>
             {errors.surname && (
-              <p className="font-semibold text-red-500">{errors.surname.message}</p>
+              <ErrorMsg>{errors.surname.message}</ErrorMsg>
             )}
           </div>
           
@@ -134,7 +133,7 @@ export default function UserScheduling() {
               onChange={handleDateChange}/>
             </div>
             {errors.birthday && (
-              <p className="font-semibold text-red-500">{errors.birthday.message}</p>
+             <ErrorMsg>{errors.birthday.message}</ErrorMsg>
             )}
           </div>
 
@@ -142,7 +141,7 @@ export default function UserScheduling() {
             <Label htmlFor="email">Correo electronico</Label>
             <Input {...register('email')} placeholder="ejemplo@mail.cl"/>
             {errors.email && (
-              <p className="font-semibold text-red-500">{errors.email.message}</p>
+              <ErrorMsg>{errors.email.message}</ErrorMsg>
             )}
           </div>
 
@@ -150,7 +149,7 @@ export default function UserScheduling() {
             <Label htmlFor="direccion">Dirección</Label>
             <Input {...register('direccion')} placeholder="Macul 1234"/>
             {errors.direccion && (
-              <p className="font-semibold text-red-500">{errors.direccion.message}</p>
+              <ErrorMsg>{errors.direccion.message}</ErrorMsg>
             )}
           </div>
 
@@ -158,7 +157,7 @@ export default function UserScheduling() {
             <Label>Contraseña</Label>
             <Input type="password" {...register('password')} placeholder="Contraseña"/>
             {errors.password && (
-              <p className="font-semibold text-red-500">{errors.password.message}</p>
+              <ErrorMsg>{errors.password.message}</ErrorMsg>
             )}
           </div>
 
@@ -166,7 +165,7 @@ export default function UserScheduling() {
             <Label>Confirmar Contraseña</Label>
             <Input type="password" {...register('confirmPassword')} placeholder="Confirmar contraseña"/>
             {errors.confirmPassword && (
-              <p className="font-semibold text-red-500">{errors.confirmPassword.message}</p>
+              <ErrorMsg>{errors.confirmPassword.message}</ErrorMsg>
             )}
           </div>
         </div>
