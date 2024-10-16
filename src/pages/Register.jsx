@@ -42,10 +42,34 @@ const userSchema = z.object({
     .min(6, "La contraseña debe tener entre 6 y 10 caracteres")
     .max(10, "La contraseña debe tener entre 6 y 10 caracteres"),
   confirmPassword: z.string().min(1, "Debe confirmar su contraseña")
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Las contraseñas no coinciden",
-  path: ["confirmPassword"], // Muestra el error en el campo de confirmación
+})
+.refine((data) => {
+  const dvCalculated = calcularDV(data.rutNum);
+  return dvCalculated.toUpperCase() === data.rutDig.toUpperCase();
+}, {
+  message: "El digito verificador no corresponde al RUT",
+  path: ["rutDig"], // Muestra el error en el campo de digito verificador
+})
+.refine((data) => 
+  data.password === data.confirmPassword, {
+    message: "Las contraseñas no coinciden",
+    path: ["confirmPassword"], // Muestra el error en el campo de confirmación
 });
+
+function calcularDV(rut) {
+  let suma = 0;
+  let multiplicador = 2;
+
+  for (let i = rut.length - 1; i >= 0; i--) {
+    suma += parseInt(rut[i]) * multiplicador;
+    multiplicador = multiplicador === 7 ? 2 : multiplicador + 1;
+  }
+
+  const resto = 11 - (suma % 11);
+  if (resto === 11) return '0';
+  if (resto === 10) return 'K';
+  return `${resto}`;
+}
 
 export default function UserScheduling() {
   const [date, setDate] = useState("")
@@ -83,7 +107,7 @@ export default function UserScheduling() {
   };
 
   return (
-    <div className="bg-slate-950">
+    <div className="bg-slate-950 w-full min-h-screen">
       <Card className="w-auto max-w-md mx-auto">
       <form onSubmit={handleSubmit(onSubmit)}>
         <CardHeader>
@@ -104,7 +128,7 @@ export default function UserScheduling() {
                   <Input
                     {...register('rutDig')} 
                     placeholder="K"
-                    className="w-10"/>
+                    className="w-10 ml-6"/>
                 </div>
                 {errors.rutNum ? (
                   <ErrorMsg>{errors.rutNum.message}</ErrorMsg>
@@ -159,23 +183,38 @@ export default function UserScheduling() {
             </section>
           </article>
 
-          <div className="space-y-2">
-            <Label>Contraseña</Label>
-            <Input type="password" {...register('password')} placeholder="Contraseña"/>
-            {errors.password && (
-              <ErrorMsg>{errors.password.message}</ErrorMsg>
-            )}
-          </div>
+          <hr className="space-y-4 border-gray-150"/>
 
-          <div className="space-y-2">
-            <Label>Confirmar Contraseña</Label>
-            <Input type="password" {...register('confirmPassword')} placeholder="Confirmar contraseña"/>
-            {errors.confirmPassword && (
-              <ErrorMsg>{errors.confirmPassword.message}</ErrorMsg>
-            )}
-          </div>
+          <article className="flex">
+            <section className="flex-1 mr-3">
+              <div className="space-y-2">
+                <Label>Contraseña</Label>
+                <Input type="password" {...register('password')} placeholder="Contraseña"/>
+                {errors.password && (
+                  <ErrorMsg>{errors.password.message}</ErrorMsg>
+                )}
+              </div>
+  
+              <div className="space-y-2">
+                <Label>Confirmar Contraseña</Label>
+                <Input type="password" {...register('confirmPassword')} placeholder="Confirmar contraseña"/>
+                {errors.confirmPassword && (
+                  <ErrorMsg>{errors.confirmPassword.message}</ErrorMsg>
+                )}
+              </div>
+            </section>
 
-          <Button type="submit">Registrarse</Button>
+            <section className="flex-1">
+              {/* Aqui poner info de complejidad de contraseña */}
+            </section>
+
+          </article>
+
+          <section className="flex justify-center">
+            <Button type="submit" className="w-[193.2px]">
+              Registrarse
+            </Button>
+          </section>
         </main>
         </CardContent>
       </form>
