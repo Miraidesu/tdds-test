@@ -11,7 +11,16 @@ import { Card,
   CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { format, subYears } from 'date-fns'
 import ErrorMsg from "@/components/error-msg"
+import { Eye, EyeOff } from "lucide-react"
 
 // aquí agregamos la validación para que las contraseñas coincidan
 const userSchema = z.object({
@@ -22,8 +31,7 @@ const userSchema = z.object({
     .max(8, "El RUT debe tener máximo 8 digitos"),
   rutDig: z.string()
     .min(1, "El digito verificador es requerido")
-    .regex(/^[0-9kK]+$/, "El digito verificador debe ser un número o K")
-    .max(1, "El digito verificador debe tener solo un caracter"),
+    .regex(/^[0-9kK]+$/, "El digito verificador debe ser un número o K"),
   name: z.string()
     .min(1, "El nombre es requerido")
     .regex(/^[a-zA-Z\s]+$/, "El nombre debe contener solo letras"),
@@ -34,13 +42,23 @@ const userSchema = z.object({
     .min(1, "Ingrese su fecha de nacimiento"),
   direccion: z.string()
     .min(1, "Ingrese su direccion"),
+  comuna: z.string({
+    required_error: "La comuna es requerida"
+  }),
   email: z.string()
     .min(1, "El correo es requerido")
     .regex(/^[a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)*@[a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)*[.][a-zA-Z]{2,5}$/, 
       "El correo ingresado es inválido"),
+  phone: z.string()
+    .min(1, "El teléfono es requerido")
+    .regex(/^[0-9]+$/, "El teléfono debe ser numérico")
+    .max(9, "El teléfono debe tener máximo 9 digitos"),
   password: z.string()
-    .min(6, "La contraseña debe tener entre 6 y 10 caracteres")
-    .max(10, "La contraseña debe tener entre 6 y 10 caracteres"),
+    .min(8, "La contraseña debe tener al menos 8 caracteres")
+    .regex(/[A-Z]/, "La contraseña debe contener al menos una letra mayúscula.")
+    .regex(/[a-z]/, "La contraseña debe contener al menos una letra minúscula.")
+    .regex(/[0-9]/, "La contraseña debe contener al menos un número.")
+    .regex(/[\W_]/, "La contraseña debe contener al menos un carácter especial."),
   confirmPassword: z.string().min(1, "Debe confirmar su contraseña")
 })
 .refine((data) => {
@@ -71,39 +89,34 @@ function calcularDV(rut) {
   return `${resto}`;
 }
 
+const comunas = {
+  0: "Alto del Carmen",
+  1: "Caldera",
+  2: "Chañaral",
+  3: "Copiapo",
+  4: "Diego de Almagro",
+  5: "Freirina",
+  6: "Huasco",
+  7: "Tierra Amarilla",
+  8: "Vallenar"
+}
+
 export default function UserScheduling() {
-  const [date, setDate] = useState("")
-  const { register, handleSubmit, formState: { errors } } = useForm({
+  const [showPassword, setShowPassword] = useState(false);
+
+  const { register, handleSubmit, formState: { errors }, setValue } = useForm({
     resolver: zodResolver(userSchema),
+    mode: "onChange"
   });
 
+  const togglePassword = () => setShowPassword(!showPassword);
+
   const onSubmit = (data) => {
+    data.comuna = Number(data.comuna);
+    data.phone = Number(data.phone);
+    data.rutNum = Number(data.rutNum);
     console.log("Form Data:", data);
     alert('Form is valid and submitted!');
-  };
-
-  const handleDateChange = (event) => {
-    const { value } = event.target;
-    const onlyNumbers = value.replace(/\D/g, '');
-    let formattedDate = '';
-
-    if (onlyNumbers.length >= 2) {
-      formattedDate += onlyNumbers.substring(0, 2) + '/'; // Día
-    } else if (onlyNumbers.length > 0) {
-      formattedDate += onlyNumbers.substring(0, 2);
-    }
-    
-    if (onlyNumbers.length >= 4) {
-      formattedDate += onlyNumbers.substring(2, 4) + '/'; // Mes
-    } else if (onlyNumbers.length > 2) {
-      formattedDate += onlyNumbers.substring(2, 4);
-    }
-
-    if (onlyNumbers.length > 4) {
-      formattedDate += onlyNumbers.substring(4, 8); // Año
-    }
-
-    setDate(formattedDate);
   };
 
   return (
@@ -152,24 +165,50 @@ export default function UserScheduling() {
                   <ErrorMsg>{errors.surname.message}</ErrorMsg>
                 )}
               </div>
-            </section>
-
-            <section className="flex-1 ml-3">
+              
               <div className="space-y-2">
                 <Label htmlFor="birthday">Fecha de nacimiento</Label>
-                <Input {...register('birthday')} className="col-span-10" placeholder="DD/MM/AAAA" value={date}
-                onChange={handleDateChange}/>
+                <Input type="date" max={format(subYears(new Date(), 18), "yyyy-MM-dd")} {...register('birthday')} />
                 
                 {errors.birthday && (
                 <ErrorMsg>{errors.birthday.message}</ErrorMsg>
                 )}
               </div>
+            </section>
 
+            <section className="flex-1 ml-3">
+              <div className="space-y-2">
+                <Label htmlFor="phone">Telefono</Label>
+                <Input {...register('phone')} placeholder="912345678"/>
+                {errors.phone && (
+                  <ErrorMsg>{errors.phone.message}</ErrorMsg>
+                )}
+              </div>
+          
               <div className="space-y-2">
                 <Label htmlFor="email">Correo electronico</Label>
                 <Input {...register('email')} placeholder="ejemplo@mail.cl"/>
                 {errors.email && (
                   <ErrorMsg>{errors.email.message}</ErrorMsg>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="Comuna">Comuna</Label>
+                <Select onValueChange={(v) => setValue('comuna', v)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(comunas).map(([value, label]) => (
+                      <SelectItem key={value} value={value}>
+                        {label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {errors.comuna && (
+                  <ErrorMsg>{errors.comuna.message}</ErrorMsg>
                 )}
               </div>
 
@@ -188,26 +227,34 @@ export default function UserScheduling() {
           <article className="flex">
             <section className="flex-1 mr-3">
               <div className="space-y-2">
-                <Label>Contraseña</Label>
-                <Input type="password" {...register('password')} placeholder="Contraseña"/>
-                {errors.password && (
-                  <ErrorMsg>{errors.password.message}</ErrorMsg>
-                )}
+                <div className="flex">
+                  <Label>
+                    Contraseña
+                  </Label>
+                  {showPassword ? (
+                    <EyeOff className="ml-auto cursor-pointer" size={18} color="black" onClick={togglePassword} />
+                  ) : (
+                    <Eye className="ml-auto cursor-pointer" size={18} color="black" onClick={togglePassword} />
+                  )}
+                </div>
+                <Input type={showPassword ? "text" : "password"} {...register('password')} 
+                placeholder="Contraseña"/>
               </div>
-  
               <div className="space-y-2">
                 <Label>Confirmar Contraseña</Label>
-                <Input type="password" {...register('confirmPassword')} placeholder="Confirmar contraseña"/>
-                {errors.confirmPassword && (
-                  <ErrorMsg>{errors.confirmPassword.message}</ErrorMsg>
-                )}
+                <Input type={showPassword ? "text" : "password"} {...register('confirmPassword')} 
+                placeholder="Confirmar contraseña"/>
               </div>
             </section>
 
-            <section className="flex-1">
-              {/* Aqui poner info de complejidad de contraseña */}
+            <section className="flex-1 ml-3">
+              <Label>Requisitos de contraseña</Label>
+              {errors.password ? (
+                <ErrorMsg>{errors.password.message}</ErrorMsg>
+              ) : errors.confirmPassword ? (
+                <ErrorMsg>{errors.confirmPassword.message}</ErrorMsg>
+              ) : null}
             </section>
-
           </article>
 
           <section className="flex justify-center">
