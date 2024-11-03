@@ -1,4 +1,5 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useForm } from "react-hook-form";
 import { es } from "date-fns/locale"
 import { Button } from "@/components/ui/button"
 import { Card, 
@@ -21,24 +22,85 @@ export default function UserScheduling() {
   const [doctor, setDoctor]     = useState()
   const [timeSlot, setTimeSlot] = useState()
 
-  const serviceList = [
-    { value: "consulta", label: "Consulta medica" }
-  ]
-  const doctorList = [
-    { value: "dr-house", label: "Dr. House" }
-  ]
-  const timeSlotList = [
-    { value: "18:00", label: "18:00" }
-  ]
+  const [serviceList, setServiceList] = useState([]);
+  const [doctorList, setDoctorList] = useState([]);
+  const [timeSlotList, setTimeSlotList] = useState([]);
+
+  const { handleSubmit, register, formState: { errors }, setValue } = useForm({
+    mode: "onChange"
+  });
+
+  const onSubmit = async () => {
+    const data = {
+      service,
+      date,
+      doctor,
+      timeSlot,
+    };
+  
+    try {
+      const response = await fetch("http://localhost:5000/api/userSchedule", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+  
+      if (response.ok) {
+        const result = await response.json();
+        alert(result.message);
+      } else {
+        const result = await response.json();
+        alert(result.message);
+      }
+    } catch (error) {
+      console.error("Error de conexión:", error);
+    }
+  };
 
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    console.log("Appointment scheduled:", { service, doctor, date, timeSlot })
-    alert("Appointment scheduled successfully!")
-  }
+  useEffect(() => {
+    const fetchServicios = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/api/userSchedule/servicios");
+        const data = await response.json();
+        setServiceList(data);
+      } catch (error) {
+        console.error("Error al obtener servicios:", error);
+      }
+    };
+    fetchServicios();
+  }, []);
+
+  useEffect(() => {
+    const fetchMedicos = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/api/userSchedule/medicos");
+        const data = await response.json();
+        setDoctorList(data);
+      } catch (error) {
+        console.error("Error al obtener médicos:", error);
+      }
+    };
+    fetchMedicos();
+  }, []);
+
+  useEffect(() => {
+    const fetchHorarios = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/api/userSchedule/horarios");
+        const data = await response.json();
+        setTimeSlotList(data);
+      } catch (error) {
+        console.error("Error al obtener horarios:", error);
+      }
+    };
+    fetchHorarios();
+  }, []);
 
   return (
+
     <div className="bg-slate-950 max-h-svh">
       <Card className="w-[325px] max-w-md mx-auto">
         <CardHeader>
@@ -60,7 +122,7 @@ export default function UserScheduling() {
                       <SelectItem value={i.value}>{i.label}</SelectItem>
                     )}
                   </SelectContent>
-                </Select>
+                </Select >
               </div>
 
               { service ?
@@ -110,7 +172,11 @@ export default function UserScheduling() {
           </form>
         </CardContent>
         <CardFooter>
-          <Button className="w-full" disabled={true} onClick={handleSubmit}>Reservar</Button>
+          {service && date && doctor && timeSlot? 
+            <Button className="w-full" onClick={handleSubmit(onSubmit)}>Reservar</Button>
+            : <Button className="w-full" disabled={true}>Reservar</Button> 
+          }
+          
         </CardFooter>
       </Card>
     </div>

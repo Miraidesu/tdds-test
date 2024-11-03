@@ -21,6 +21,7 @@ import {
 import { format, subYears } from 'date-fns'
 import ErrorMsg from "@/components/error-msg"
 import { Eye, EyeOff } from "lucide-react"
+import { useNavigate } from 'react-router-dom'
 
 // aquí agregamos la validación para que las contraseñas coincidan
 const userSchema = z.object({
@@ -103,6 +104,7 @@ const comunas = {
 
 export default function UserScheduling() {
   const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate();
 
   const { register, handleSubmit, formState: { errors }, setValue } = useForm({
     resolver: zodResolver(userSchema),
@@ -111,12 +113,31 @@ export default function UserScheduling() {
 
   const togglePassword = () => setShowPassword(!showPassword);
 
-  const onSubmit = (data) => {
+  const onSubmit = async (data) => {
+    // Convertir valores numéricos
     data.comuna = Number(data.comuna);
     data.phone = Number(data.phone);
     data.rutNum = Number(data.rutNum);
-    console.log("Form Data:", data);
-    alert('Form is valid and submitted!');
+  
+    try {
+      const response = await fetch("http://localhost:5000/api/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data)
+      });
+  
+      if (response.ok) {
+        const result = await response.json();
+        alert(result.message);
+        navigate("/login");
+      } else {
+        console.error("Error al registrar:", response.statusText);
+      }
+    } catch (error) {
+      console.error("Error de conexión:", error);
+    }
   };
 
   return (
