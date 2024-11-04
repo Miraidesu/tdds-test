@@ -6,7 +6,9 @@ app = Flask(__name__)
 CORS(app)
 
 clientes_list = []
-reservas_list = [] 
+reservas_list = []
+profiles_list = []
+
 
 class Reserva ():
     def __init__(self, servicio, fecha, medico, hora):
@@ -33,6 +35,35 @@ class Cliente ():
     
     def __str__(self):
         return self.rut, self.dig, self.name
+
+
+    
+class Perfil ():
+    def __init__(self, id, nombre, email, rol):
+        self.id = id
+        self.nombre = nombre
+        self.email = email
+        self.rol = rol
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.nombre,
+            "email": self.email,
+            "role": self.rol
+        }
+    
+    def __str__(self):
+        return self.id, self.nombre, self.email, self.rol
+
+
+perfil_1 = Perfil(1, "John Doe", "john@example.com", "Medico")
+perfil_2 = Perfil(2, "Jane Smith", "jane@example.com", "Contador")
+perfil_3 = Perfil(3, "Alice Johnson", "alice@example.com", "Secretaria")
+perfil_4 = Perfil(4, "Bob Williams", "bob@example.com", "Desarrollador")
+
+
+profiles_list = [perfil_1, perfil_2, perfil_3, perfil_4]
 
 
 @app.route('/api/register', methods=['POST'])
@@ -70,6 +101,7 @@ def register_cliente():
             "password" : cliente.password
         }
         }), 201
+
 
 @app.route('/api/login', methods=['POST'])
 def login_cliente():
@@ -126,6 +158,63 @@ def get_horarios():
         {"value": "19:00", "label": "19:00"},
         ]
     return jsonify(horarios)
+
+@app.route('/api/createProfiles', methods=['GET', 'POST', 'PUT', 'DELETE'])
+
+def manage_profiles():
+    if request.method == "GET":
+        roles_list = [
+            {"value" : "Medico", "label" : "Medico"},
+            {"value" : "Desarrollador", "label" : "Desarrollador"},
+            {"value" : "Contador", "label" : "Contador"},
+            {"value" : "Administrador", "label" : "Administrador"},
+            {"value" : "Secretaria", "label" : "Secretaria"}
+        ] 
+
+        profiles_as_dicts = [perfil.to_dict() for perfil in profiles_list]
+
+        
+        return jsonify({"roles_list" : roles_list, "profiles_list" : profiles_as_dicts})
+    
+    elif request.method == "POST":              # añadir perfiles
+        data = request.json
+        id = 0
+        new_id = max((perfil.id for perfil in profiles_list), default=0) + 1
+
+        new_profile = Perfil(new_id, data["name"], data["email"], data["role"])
+        profiles_list.append(new_profile)
+        return jsonify({"message": "Perfil creado exitosamente"}), 201
+
+    elif request.method == "PUT":               # actualizar perfiles
+        data = request.json
+        for perfil in profiles_list:
+            if perfil.id == data["id"]:
+                perfil.nombre = data["name"]
+                perfil.email = data["email"]
+                perfil.rol = data["role"]
+
+                return jsonify({"message": "Perfil actualizado correctamente"}), 201
+        
+        return jsonify({"message": "Perfil no encontrado"}), 404
+
+    elif request.method == "DELETE":
+        data = request.json
+
+        # Encontrar el perfil a eliminar
+        perfil_to_delete = next((perfil for perfil in profiles_list if perfil.id == data['id']), None)
+
+        if perfil_to_delete:
+            profiles_list.remove(perfil_to_delete)  # Elimina el perfil de la lista
+
+            profiles_as_dicts = [perfil.to_dict() for perfil in profiles_list]
+
+            for perfil in profiles_as_dicts:
+                print(perfil)
+
+            return jsonify({"message": "Perfil eliminado correctamente"}), 200
+        else:
+            return jsonify({"message": "Perfil no encontrado"}), 404
+
 
 if __name__ == '__main__':
     app.run(debug=True)
