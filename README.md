@@ -52,9 +52,19 @@
 
 Libreria de componentes [shadcn-ui](https://ui.shadcn.com/)
 
-## Instalación
+## Instalación Front
 En la carpeta raíz del proyecto:
 ```bash
 npm install
-npm run dev
+npm run dev # correr proyecto
 ```
+
+## Instalación Back
+En la ruta 'src/backend' del proyecto:
+```bash
+python -m venv .venv            # creación entorno virtual
+.venv/Scripts/activate          # activar entorno virtual - linux: 'source .venv/bin/activate'
+pip install -r requirements.txt # instalación paquetes (flask, etc...)
+python app.py                   # correr aplicación
+```
+SIEMPRE correr Flask en el entorno virutal, si hay un error al instalar paquetes o al correr el programa usar [Python 3.11.2](https://www.python.org/downloads/release/python-3112/)
