@@ -1,9 +1,10 @@
 from flask import Flask, request, jsonify
 
 from flask_cors import CORS
+import bcrypt
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, origins=["http://localhost:5173"])
 
 clientes_list = []
 reservas_list = []
@@ -69,6 +70,11 @@ profiles_list = [perfil_1, perfil_2, perfil_3, perfil_4]
 @app.route('/api/register', methods=['POST'])
 def register_cliente():
     data = request.json
+
+    bytes = data['password'].encode('utf-8')
+    salt = bcrypt.gensalt() 
+    pass_hashed = bcrypt.hashpw(bytes, salt)
+
     cliente = Cliente(
         rut=data['rutNum'],
         dig=data['rutDig'],
@@ -79,7 +85,7 @@ def register_cliente():
         comuna=data['comuna'],
         email=data['email'],
         phone=data['phone'],
-        password=data['password']  # Asegúrate de hashear la contraseña
+        password=pass_hashed  # Asegúrate de hashear la contraseña
     )
 
     clientes_list.append(cliente)
@@ -106,10 +112,11 @@ def register_cliente():
 @app.route('/api/login', methods=['POST'])
 def login_cliente():
     data = request.json
+    bytes = data['password'].encode('utf-8')
 
     for cliente in clientes_list:
         print(cliente.rut, cliente.dig, cliente.password)
-        if cliente.rut == data["rutNum"] and cliente.dig == data["rutDig"] and cliente.password == data["password"]:
+        if cliente.rut == data["rutNum"] and bcrypt.checkpw(bytes, cliente.password):
             return jsonify({'message': "Login exitoso"}), 200
 
     return jsonify({'message': "Datos incorrectos"}), 401
