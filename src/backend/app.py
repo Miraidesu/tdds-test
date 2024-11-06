@@ -3,12 +3,31 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import bcrypt
 
+
+
 app = Flask(__name__)
 CORS(app, origins=["http://localhost:5173"])
 
 clientes_list = []
 reservas_list = []
 profiles_list = []
+diagnosticos_list = []
+
+class Diagnostico ():
+    def __init__(self, cod_consulta, motivo, diagnostico):
+        self.cod_consulta = cod_consulta
+        self.motivo = motivo
+        self.diagnostico = diagnostico
+
+    def to_dict(self):
+        return {
+        "cod_": self.cod_consulta,
+        "motivo": self.motivo,
+        "diagnostico": self.diagnostico
+        }
+    
+    def __str__(self):
+        return self.cod_consulta + self.motivo + self.diagnostico
 
 
 class Reserva ():
@@ -221,6 +240,27 @@ def manage_profiles():
             return jsonify({"message": "Perfil eliminado correctamente"}), 200
         else:
             return jsonify({"message": "Perfil no encontrado"}), 404
+        
+@app.route('/api/diagnostico', methods=['POST'])
+
+def manage_diagnostic():
+    data = request.json
+
+    consulta = Diagnostico(
+        cod_consulta = len(diagnosticos_list),
+        motivo = data["motivo"],
+        diagnostico = data["diagnostico"]
+    )
+
+    diagnosticos_list.append(consulta)
+
+    print(diagnosticos_list.__str__())
+    
+    return jsonify({"message" : "Consulta registrada exitosamente"}), 200
+
+
+
+
 
 
 if __name__ == '__main__':

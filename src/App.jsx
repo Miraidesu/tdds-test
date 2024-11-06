@@ -7,6 +7,7 @@ import Info from "./pages/Info"
 import Login from "./pages/Login"
 import Register from "./pages/Register"
 import UserScheduling from "./pages/UserScheduling"
+import Diagnostic from "./pages/Diagnostic"
 // import Home from './pages/Home';
 import NavBar from './pages/NavBar';
 
@@ -18,6 +19,8 @@ function App() {
         <Route path="/userSchedule" element={<UserScheduling />} />
         <Route path="/login" element={<Login />} />
         <Route path="/crearPerfiles" element={<CreateProfile />} />
+        <Route path="/dashboard" element={<Dashboard/>} />
+        <Route path="/diagnostic" element={<Diagnostic/>} />
       </Routes>
     </Router>
   ) 

@@ -284,6 +284,7 @@ export default function UserScheduling() {
             </Button>
           </section>
           <Button type="button" variant="outline" className="col-start-2 col-span-4" onClick={() => navigate("/crearPerfiles")}>Ir a crear Perfiles (Temporal)</Button>
+          <Button type="button" variant="outline" className="col-start-2 col-span-4" onClick={() => navigate("/diagnostic")}>Ir a Diagnostico (Temporal)</Button>
         </main>
         </CardContent>
       </form>
