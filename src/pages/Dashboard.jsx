@@ -9,7 +9,8 @@ import {
 	DialogDescription,
 	DialogHeader,
 	DialogTitle,
-	DialogClose
+	DialogClose,
+	DialogFooter
   } from "@/components/ui/dialog"
 import { Button } from '@/components/ui/button'
 import { useState } from 'react'
@@ -17,23 +18,49 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from 'postcss'
 import { SelectContent, SelectItem, SelectTrigger } from '@radix-ui/react-select'
 
-function DashCalendar({ eventSelected, setEventSelected, handleClick }) {
+function DashCalendar({setActiveComponent}) {
+	const [eventSelected, setEventSelected] = useState(false);
+	const [event, setEvent] = useState(null);
+
+	const handleEventDetails = () => {
+		setActiveComponent('appointments')
+		setEventSelected(false)
+		console.log(event.id);
+	}
+
+	
+	const handleClick = (info) => {
+		setEvent(info);
+		setEventSelected(true);
+		console.log(info.id);
+	};
+
 	return (
-		<>
+		<div style={
+			{
+				"--fc-border-color": "#e2e8f0",
+				"height": "100%",
+				
+			}
+		}>
 			<FullCalendar
 				height={'100%'}
 				plugins={[dayGridPlugin, timeGridPlugin]}
 				initialView="timeGridWeek"
 				headerToolbar={{
-					right: 'timeGridDay,timeGridWeek,dayGridMonth prev,next',
+					right: 'today timeGridDay,timeGridWeek,dayGridMonth prev,next',
 					left: 'title',
 				}}
-				slotLabelFormat={{
-					hour: 'numeric',
-					minute: '2-digit',
-					omitZeroMinute: true,
-					meridiem: 'short',
+				allDaySlot={false}
+				views={{
+					week: {
+						titleFormat: { year: 'numeric', month: 'long' },
+						dayHeaderFormat: { weekday: 'short', day: 'numeric' },
+					}
 				}}
+				slotLabelFormat={
+					{ hour: 'numeric', minute: '2-digit', meridiem: 'short' }
+				}
 				nowIndicator={true}
 				locale={'es'}
 				firstDay={1}
@@ -56,6 +83,12 @@ function DashCalendar({ eventSelected, setEventSelected, handleClick }) {
 						start: '2024-11-07T08:00:00',
 						end: '2024-11-07T09:00:00',
 					},
+					{
+						id: 2,
+						title: 'Consulta',
+						start: '2024-11-07T09:00:00',
+						end: '2024-11-07T10:00:00',
+					},
 				]}
 			/>
 
@@ -65,14 +98,16 @@ function DashCalendar({ eventSelected, setEventSelected, handleClick }) {
 						<DialogHeader>
 							<DialogTitle>Evento seleccionado</DialogTitle>
 							<DialogDescription>Detalles del evento</DialogDescription>
-							<DialogClose>
-								<Button onClick={() => setEventSelected(false)}>Volver</Button>
-							</DialogClose>
+							<DialogFooter>
+								<Button onClick={handleEventDetails}>Ver detalles</Button>
+								<Button variant="outline" onClick={() => setEventSelected(false)}>Volver</Button>
+							</DialogFooter>
+								
 						</DialogHeader>
 					</DialogContent>
 				</Dialog>
 			)}
-		</>
+		</div>
 	);
 }
 
@@ -111,24 +146,17 @@ function handleLogout() {
 
 export default function Dashboard() {
 	const [activeComponent, setActiveComponent] = useState('calendar');
-	const [eventSelected, setEventSelected] = useState(false);
 
 	const renderComponent = () => {
 		switch (activeComponent) {
 			case 'calendar':
 				return <DashCalendar
-					eventSelected={eventSelected}
-					setEventSelected={setEventSelected}
-					handleClick={handleClick} />
+					setActiveComponent={setActiveComponent}
+					/>
 			case 'appointments':
 				return <Appointments />
 		}
 	}
-
-	const handleClick = (info) => {
-		setEventSelected(true);
-		console.log(info.id);
-	};
 
 	return (
 		<div className="grid grid-cols-4">
