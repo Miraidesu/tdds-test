@@ -39,12 +39,12 @@ function DashCalendar({setActiveComponent}) {
 		<div style={
 			{
 				"--fc-border-color": "#e2e8f0",
-				"height": "100%",
+				"overflowY": "auto",
 				
 			}
 		}>
 			<FullCalendar
-				height={'100%'}
+				height={'100vh'}
 				plugins={[dayGridPlugin, timeGridPlugin]}
 				initialView="timeGridWeek"
 				headerToolbar={{
@@ -115,19 +115,73 @@ function Appointments() {
 	return (
 		<>
 			<h1 className="text-2xl font-bold mb-4">Citas</h1>
-			<div className='h-screen className="space-y-4'>
+			<div className='grid grid-cols-1 md:grid-cols-2 gap-4 p-4 space-y-4'>
+				<Card>
+					<CardContent className="flex pt-4">
+						<div className='grow'>
+						<h2 className="text-lg font-semibold">paciente</h2>
+						<div className="flex items-center text-sm text-muted-foreground mt-1">
+							<Calendar className="h-4 w-4 mr-1" />
+							ahora
+						</div>
+						<div className="flex items-center text-sm text-muted-foreground mt-1">
+							<Clock className="h-4 w-4 mr-1" />
+							2
+						</div>
+						</div>
+						<Button variant="outline" className="mt-4">
+						<User className="h-4 w-4 mr-1" />
+							Ver detalles
+						</Button>
+					</CardContent>
+				</Card>
+				<Card>
+					<CardContent className="flex pt-4">
+						<div className='grow'>
+						<h2 className="text-lg font-semibold">paciente</h2>
+						<div className="flex items-center text-sm text-muted-foreground mt-1">
+							<Calendar className="h-4 w-4 mr-1" />
+							ahora
+						</div>
+						<div className="flex items-center text-sm text-muted-foreground mt-1">
+							<Clock className="h-4 w-4 mr-1" />
+							2
+						</div>
+						</div>
+						<Button variant="outline" className="mt-4">
+						<User className="h-4 w-4 mr-1" />
+							Ver detalles
+						</Button>
+					</CardContent>
+				</Card>
+				
+			</div>
+		</>
+	);
+}
+
+function Patients() {
+	/* select * from pacientes 
+		inner join citas on pacientes.id = citas.paciente_id 
+		inner join medico on medico.id = citas.medico_id
+		where medico.id = 1 */
+
+	// algo asi deberia ser
+	
+	const patientsList = [
+		{
+			id: 1,
+			name: 'Paciente 1',
+		}
+	]
+	return (
+		<>
+			<h1 className="text-2xl font-bold mb-4">Tus pacientes</h1>
+			<div className='space-y-4'>
 				<Card>
 					<CardContent className="flex items-center p-4">
 					<div className="flex-grow">
 						<h2 className="text-lg font-semibold">paciente</h2>
-						<div className="flex items-center text-sm text-muted-foreground mt-1">
-						<Calendar className="h-4 w-4 mr-1" />
-						ahora
-						</div>
-						<div className="flex items-center text-sm text-muted-foreground mt-1">
-						<Clock className="h-4 w-4 mr-1" />
-						2
-						</div>
 					</div>
 					<Button variant="outline" size="sm">
 						<User className="h-4 w-4 mr-1" />
@@ -137,9 +191,8 @@ function Appointments() {
 				</Card>
 			</div>
 		</>
-	);
+	)
 }
-
 function handleLogout() {
 	console.log("Logout");
 }
@@ -155,12 +208,14 @@ export default function Dashboard() {
 					/>
 			case 'appointments':
 				return <Appointments />
+			case 'patients':
+				return <Patients />
 		}
 	}
 
 	return (
 		<div className="grid grid-cols-4">
-			<aside className="bg-white shadow-md min-h-screen">
+			<aside className="h-full min-h-screen bg-white shadow-md">
 				<div className="p-4">
 					<h2 className="text-2xl font-bold text-gray-800">Dashboard</h2>
 				</div>
