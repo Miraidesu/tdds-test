@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { 
 	CalendarIcon, 
 	ClipboardListIcon, 
@@ -25,32 +25,46 @@ import {
 } from "@/components/ui/dialog"
 import { format } from 'date-fns'
 
-function DashCalendar({setActiveComponent}) {
+
+function DashCalendar({ setActiveComponent }) {
 	const [eventSelected, setEventSelected] = useState(false);
 	const [event, setEvent] = useState(null);
+	const [citasList, setCitasList] = useState([]);
 
 	const handleEventDetails = () => {
-		setActiveComponent('appointments')
-		setEventSelected(false)
-		console.log(event.id);
-	}
-	
-	const handleClick = (info) => {
-		setEvent(info);
-		setEventSelected(true);
-		console.log(info.id);
+		setActiveComponent('appointments');
+		setEventSelected(false);
 	};
 
+	const handleClick = (info) => {
+		setEvent(info.event);
+		setEventSelected(true);
+	};
+
+	const fetchData = async () => {
+		try {
+			const response = await fetch("http://localhost:5000/api/dashboard/pacientes");
+			const data = await response.json();
+			const events = data["citas"].map((appointment) => ({
+				id: appointment.id,
+				title: appointment.patient,
+				start: appointment.start_date,
+				end: appointment.end_date,
+			}));
+			setCitasList(events);
+		} catch (error) {
+			console.error("Error al obtener citas:", error);
+		}
+	};
+
+	useEffect(() => {
+		fetchData();
+	}, []);
+
 	return (
-		<div style={
-			{
-				"--fc-border-color": "#e2e8f0",
-				"overflowY": "auto",
-				
-			}
-		}>
+		<div style={{ overflowY: 'auto' }}>
 			<FullCalendar
-				height={'100vh'}
+				height="100vh"
 				plugins={[dayGridPlugin, timeGridPlugin]}
 				initialView="timeGridWeek"
 				headerToolbar={{
@@ -58,57 +72,22 @@ function DashCalendar({setActiveComponent}) {
 					left: 'title',
 				}}
 				allDaySlot={false}
-				views={{
-					week: {
-						titleFormat: { year: 'numeric', month: 'long' },
-						dayHeaderFormat: { weekday: 'short', day: 'numeric' },
-					}
-				}}
-				slotLabelFormat={
-					{ hour: 'numeric', minute: '2-digit', meridiem: 'short' }
-				}
-				nowIndicator={true}
-				locale={'es'}
+				nowIndicator
+				locale="es"
 				firstDay={1}
-				buttonText={{
-					today: 'Hoy',
-					day: 'Día',
-					month: 'Mes',
-					week: 'Semana',
-					prev: 'Anterior',
-					next: 'Siguiente',
-				}}
-				eventMouseEnter={(e) => {
-					e.el.style.cursor = 'pointer';
-				}}
-				eventClick={(info) => handleClick(info.event)}
-				events={[
-					{
-						id: 1,
-						title: 'Consulta',
-						start: '2024-11-07T08:00:00',
-						end: '2024-11-07T09:00:00',
-					},
-					{
-						id: 2,
-						title: 'Consulta',
-						start: '2024-11-07T09:00:00',
-						end: '2024-11-07T10:00:00',
-					},
-				]}
+				eventClick={(info) => handleClick(info)}
+				events={citasList}
 			/>
 
-			{eventSelected && (
+			{eventSelected && event && (
 				<Dialog open onOpenChange={setEventSelected}>
 					<DialogContent>
 						<DialogHeader>
 							<DialogTitle>Evento seleccionado</DialogTitle>
-							<DialogDescription>Detalles del evento</DialogDescription>
 							<DialogFooter>
 								<Button onClick={handleEventDetails}>Ver detalles</Button>
 								<Button variant="outline" onClick={() => setEventSelected(false)}>Volver</Button>
 							</DialogFooter>
-								
 						</DialogHeader>
 					</DialogContent>
 				</Dialog>
@@ -118,110 +97,87 @@ function DashCalendar({setActiveComponent}) {
 }
 
 function Appointments() {
-	const [appointment, setAppointment] = useState(null);
-	const appointmentList = [
-		{
-			id: 1,
-			patient: 'Nombre Apellido',
-			start_date: '2024-11-07T08:00:00',
-			end_date: '2024-11-07T09:00:00',
-		}, {
-			id: 2,
-			patient: 'Nombre Apellido',
-			start_date: '2024-11-07T09:00:00',
-			end_date: '2024-11-07T10:00:00',
-		} ,
-		{
-			id: 3,
-			patient: 'Nombre Apellido',
-			start_date: '2024-11-07T10:00:00',
-			end_date: '2024-11-07T11:00:00',
+	const [citasList, setCitasList] = useState([]);
+
+	const fetchData = async () => {
+		try {
+			const response = await fetch("http://localhost:5000/api/dashboard/pacientes");
+			const data = await response.json();
+			setCitasList(data["citas"]);
+		} catch (error) {
+			console.error("Error al obtener citas:", error);
 		}
-	]
+	};
+
+	useEffect(() => {
+		fetchData();
+	}, []);
+
 	return (
 		<>
 			<h1 className="text-2xl font-bold mb-4">Citas</h1>
 			<div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-				{appointmentList.map((appointment) => (
-					<Card>
-					<CardContent className="flex pt-4">
-						<div className='grow'>
-							<h2 className="text-lg font-semibold">{appointment.patient}</h2>
-							<div className="flex items-center text-sm text-muted-foreground mt-1">
-								<Calendar className="h-4 w-4 mr-1" />
-								{format(new Date(appointment.start_date), 'dd/MM/yyyy')}
+				{citasList.map((appointment) => (
+					<Card key={appointment.id}>
+						<CardContent className="flex pt-4">
+							<div className='grow'>
+								<h2 className="text-lg font-semibold">{appointment.patient}</h2>
+								<div className="flex items-center text-sm mt-1">
+									<Calendar className="h-4 w-4 mr-1" />
+									{format(new Date(appointment.start_date), 'dd/MM/yyyy')}
+								</div>
+								<div className="flex items-center text-sm mt-1">
+									<Clock className="h-4 w-4 mr-1" />
+									{format(new Date(appointment.start_date), 'HH:mm')} - {format(new Date(appointment.end_date), 'HH:mm')}
+								</div>
 							</div>
-							<div className="flex items-center text-sm text-muted-foreground mt-1">
-								<Clock className="h-4 w-4 mr-1" />
-								{format(new Date(appointment.start_date), 'HH:mm')} - {format(new Date(appointment.end_date), 'HH:mm')}
-							</div>
-						</div>
-						<div className='m-auto'>
-							<Button onClick={() => setAppointment(appointment)}>
-								<FileText className="h-4 w-4 mr-1" />
-								Detalles
-							</Button>
-						</div>
-					</CardContent>
-				</Card>
+						</CardContent>
+					</Card>
 				))}
-				{appointment && (
-				<Dialog open onOpenChange={setAppointment}>
-					<DialogContent>
-						<DialogHeader>
-							<DialogTitle>
-								Cita #{appointment.id}
-							</DialogTitle>
-							<DialogDescription>
-								Nombre: {appointment.patient} <br />
-								Fecha: {format(new Date(appointment.start_date), 'dd/MM/yyyy')} <br />
-								Inicio: {format(new Date(appointment.start_date), 'HH:mm')} <br />
-								Fin: {format(new Date(appointment.end_date), 'HH:mm')}
-							</DialogDescription>
-							<DialogFooter>
-								<Button variant="outline" onClick={() => setAppointment(false)}>Volver</Button>
-							</DialogFooter>
-						</DialogHeader>
-					</DialogContent>
-				</Dialog>
-				)}
 			</div>
 		</>
 	);
 }
 
-function Patients() {
-	/* select * from pacientes 
-		inner join citas on pacientes.id = citas.paciente_id 
-		inner join medico on medico.id = citas.medico_id
-		where medico.id = 1 */
 
-	// algo asi deberia ser
-	
-	const patientsList = [
-		{
-			id: 1,
-			name: 'Paciente 1',
+
+function Patients() {
+	const [citasList, setCitasList] = useState([]);
+
+	const fetchData = async () => {
+		try {
+			const response = await fetch("http://localhost:5000/api/dashboard/pacientes");
+			const data = await response.json();
+			setCitasList(data["citas"]);
+		} catch (error) {
+			console.error("Error al obtener pacientes:", error);
 		}
-	]
+	};
+
+	useEffect(() => {
+		fetchData();
+	}, []);
+
 	return (
-		<>
+		<>	
 			<h1 className="text-2xl font-bold mb-4">Tus pacientes</h1>
 			<div className='space-y-4'>
-				<Card>
-					<CardContent className="flex items-center p-4">
-					<div className="flex-grow">
-						<h2 className="text-lg font-semibold">paciente</h2>
-					</div>
-					<Button size="sm">
-						<User className="h-4 w-4 mr-1" />
-						Detalles
-					</Button>
-					</CardContent>
-				</Card>
+				{citasList.map((cita) => (
+					<Card key={cita.id}>
+						<CardContent className="flex items-center p-4">
+							<div className="flex-grow">
+								<h2 className="text-lg font-semibold">{cita.patient}</h2>
+							</div>
+							<Button size="sm">
+								<User className="h-4 w-4 mr-1" />
+								Detalles
+							</Button>
+						</CardContent>
+					</Card>
+				))}
 			</div>
 		</>
-	)
+	);
 }
 function handleLogout() {
 	console.log("Logout");

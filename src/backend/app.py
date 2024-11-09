@@ -13,6 +13,9 @@ reservas_list = []
 profiles_list = []
 diagnosticos_list = []
 
+
+
+
 class Diagnostico ():
     def __init__(self, cod_consulta, motivo, diagnostico):
         self.cod_consulta = cod_consulta
@@ -259,6 +262,39 @@ def manage_diagnostic():
     return jsonify({"message" : "Consulta registrada exitosamente"}), 200
 
 
+@app.route('/api/dashboard/pacientes', methods=['POST', 'GET'])
+
+def manage_dashboard():
+    if request.method == "GET":
+
+        # select * from pacientes 
+		# inner join citas on pacientes.id = citas.paciente_id 
+		# inner join medico on medico.id = citas.medico_id
+		# where medico.id = 1
+
+	    # algo asi deberia ser
+    
+        appointmentList = [
+                {
+                    "id": 1,
+                    "patient": 'Luis Bozo',
+                    "start_date": '2024-11-07T08:00:00',
+                    "end_date": '2024-11-07T09:00:00',
+                }, {
+                    "id": 2,
+                    "patient": 'Nico Asenjo',
+                    "start_date": '2024-11-08T09:00:00',
+                    "end_date": '2024-11-08T10:00:00',
+                } ,
+                {
+                    "id": 3,
+                    "patient": 'Daniel Vargas',
+                    "start_date": '2024-11-07T10:00:00',
+                    "end_date": '2024-11-07T11:00:00',
+                }
+        ]
+
+        return jsonify({"citas" : appointmentList})
 
 
 
