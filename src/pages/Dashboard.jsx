@@ -26,10 +26,9 @@ import {
 import { format } from 'date-fns'
 
 
-function DashCalendar({ setActiveComponent }) {
+function DashCalendar({ setActiveComponent, citasList }) {
 	const [eventSelected, setEventSelected] = useState(false);
 	const [event, setEvent] = useState(null);
-	const [citasList, setCitasList] = useState([]);
 
 	const handleEventDetails = () => {
 		setActiveComponent('appointments');
@@ -40,26 +39,6 @@ function DashCalendar({ setActiveComponent }) {
 		setEvent(info.event);
 		setEventSelected(true);
 	};
-
-	const fetchData = async () => {
-		try {
-			const response = await fetch("http://localhost:5000/api/dashboard/pacientes");
-			const data = await response.json();
-			const events = data["citas"].map((appointment) => ({
-				id: appointment.id,
-				title: appointment.patient,
-				start: appointment.start_date,
-				end: appointment.end_date,
-			}));
-			setCitasList(events);
-		} catch (error) {
-			console.error("Error al obtener citas:", error);
-		}
-	};
-
-	useEffect(() => {
-		fetchData();
-	}, []);
 
 	return (
 		<div style={{ overflowY: 'auto' }}>
@@ -72,9 +51,29 @@ function DashCalendar({ setActiveComponent }) {
 					left: 'title',
 				}}
 				allDaySlot={false}
-				nowIndicator
-				locale="es"
+				views={{
+					week: {
+						titleFormat: { year: 'numeric', month: 'long' },
+						dayHeaderFormat: { weekday: 'short', day: 'numeric' },
+					}
+				}}
+				slotLabelFormat={
+					{ hour: 'numeric', minute: '2-digit', meridiem: 'short' }
+				}
+				nowIndicator={true}
+				locale={'es'}
 				firstDay={1}
+				buttonText={{
+					today: 'Hoy',
+					day: 'Día',
+					month: 'Mes',
+					week: 'Semana',
+					prev: 'Anterior',
+					next: 'Siguiente',
+				}}
+				eventMouseEnter={(e) => {
+					e.el.style.cursor = 'pointer';
+				}}
 				eventClick={(info) => handleClick(info)}
 				events={citasList}
 			/>
@@ -96,67 +95,61 @@ function DashCalendar({ setActiveComponent }) {
 	);
 }
 
-function Appointments() {
-	const [citasList, setCitasList] = useState([]);
-
-	const fetchData = async () => {
-		try {
-			const response = await fetch("http://localhost:5000/api/dashboard/pacientes");
-			const data = await response.json();
-			setCitasList(data["citas"]);
-		} catch (error) {
-			console.error("Error al obtener citas:", error);
-		}
-	};
-
-	useEffect(() => {
-		fetchData();
-	}, []);
+function Appointments({citasList}) {
+	const [appointment, setAppointment] = useState(null);
 
 	return (
 		<>
 			<h1 className="text-2xl font-bold mb-4">Citas</h1>
 			<div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
 				{citasList.map((appointment) => (
-					<Card key={appointment.id}>
+					<Card>
 						<CardContent className="flex pt-4">
 							<div className='grow'>
-								<h2 className="text-lg font-semibold">{appointment.patient}</h2>
+								<h2 className="text-lg font-semibold">{appointment.title}</h2>
 								<div className="flex items-center text-sm mt-1">
 									<Calendar className="h-4 w-4 mr-1" />
-									{format(new Date(appointment.start_date), 'dd/MM/yyyy')}
+									{format(new Date(appointment.start), 'dd/MM/yyyy')}
 								</div>
 								<div className="flex items-center text-sm mt-1">
 									<Clock className="h-4 w-4 mr-1" />
-									{format(new Date(appointment.start_date), 'HH:mm')} - {format(new Date(appointment.end_date), 'HH:mm')}
+									{format(new Date(appointment.start), 'HH:mm')} - {format(new Date(appointment.end), 'HH:mm')}
 								</div>
+							</div>
+							<div className='m-auto'>
+								<Button onClick={() => setAppointment(appointment)}>
+									<FileText className="h-4 w-4 mr-1" />
+									Detalles
+								</Button>
 							</div>
 						</CardContent>
 					</Card>
 				))}
+				{appointment && (
+				<Dialog open onOpenChange={setAppointment}>
+					<DialogContent>
+						<DialogHeader>
+							<DialogTitle>
+								Cita #{appointment.id}
+							</DialogTitle>
+							<DialogDescription>
+								Nombre: {appointment.title} <br />
+								Fecha: {format(new Date(appointment.start), 'dd/MM/yyyy')} <br />
+								Inicio: {format(new Date(appointment.start), 'HH:mm')} <br />
+								Fin: {format(new Date(appointment.end), 'HH:mm')}
+							</DialogDescription>
+							<DialogFooter>
+								<Button variant="outline" onClick={() => setAppointment(false)}>Volver</Button>
+							</DialogFooter>
+						</DialogHeader>
+					</DialogContent>
+				</Dialog> )}
 			</div>
 		</>
 	);
 }
 
-
-
-function Patients() {
-	const [citasList, setCitasList] = useState([]);
-
-	const fetchData = async () => {
-		try {
-			const response = await fetch("http://localhost:5000/api/dashboard/pacientes");
-			const data = await response.json();
-			setCitasList(data["citas"]);
-		} catch (error) {
-			console.error("Error al obtener pacientes:", error);
-		}
-	};
-
-	useEffect(() => {
-		fetchData();
-	}, []);
+function Patients({citasList}) {
 
 	return (
 		<>	
@@ -166,7 +159,7 @@ function Patients() {
 					<Card key={cita.id}>
 						<CardContent className="flex items-center p-4">
 							<div className="flex-grow">
-								<h2 className="text-lg font-semibold">{cita.patient}</h2>
+								<h2 className="text-lg font-semibold">{cita.title}</h2>
 							</div>
 							<Button size="sm">
 								<User className="h-4 w-4 mr-1" />
@@ -185,15 +178,39 @@ function handleLogout() {
 
 export default function Dashboard() {
 	const [activeComponent, setActiveComponent] = useState('calendar');
+	const [citasList, setCitasList] = useState([]);
+
+	const fetchData = async () => {
+		try {
+			const response = await fetch("http://localhost:5000/api/dashboard/pacientes");
+			const data = await response.json();
+			const events = data["citas"].map((appointment) => ({
+				id: appointment.id,
+				title: appointment.patient,
+				start: appointment.start_date,
+				end: appointment.end_date,
+			}));
+			setCitasList(events);
+		} catch (error) {
+			console.error("Error al obtener citas:", error);
+		}
+	};
+
+	useEffect(() => {
+		fetchData();
+	}, []);
+
 
 	const renderComponent = () => {
 		switch (activeComponent) {
 			case 'calendar':
-				return <DashCalendar setActiveComponent={setActiveComponent} />
+				return <DashCalendar setActiveComponent={setActiveComponent} citasList={citasList}/>
 			case 'appointments':
-				return <Appointments />
+				return <Appointments citasList={citasList}/>
 			case 'patients':
-				return <Patients />
+				return <Patients citasList={citasList}/>
+			default:
+				return <DashCalendar setActiveComponent={setActiveComponent} citasList={citasList}/>
 		}
 	}
 
