@@ -1,8 +1,19 @@
-import { CalendarIcon, ClipboardListIcon, UsersIcon, SettingsIcon, LogOutIcon, UserIcon, LogOut, Calendar, Clock, User, Search } from 'lucide-react'
-
+import { useState } from 'react'
+import { 
+	CalendarIcon, 
+	ClipboardListIcon, 
+	UsersIcon, 
+	LogOut, 
+	Calendar, 
+	Clock, 
+	User, 
+	FileText
+} from 'lucide-react'
 import FullCalendar from '@fullcalendar/react'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'	
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 import {
 	Dialog,
 	DialogContent,
@@ -11,12 +22,8 @@ import {
 	DialogTitle,
 	DialogClose,
 	DialogFooter
-  } from "@/components/ui/dialog"
-import { Button } from '@/components/ui/button'
-import { useState } from 'react'
-import { Card, CardContent } from '@/components/ui/card'
-import { Input } from 'postcss'
-import { SelectContent, SelectItem, SelectTrigger } from '@radix-ui/react-select'
+} from "@/components/ui/dialog"
+import { format } from 'date-fns'
 
 function DashCalendar({setActiveComponent}) {
 	const [eventSelected, setEventSelected] = useState(false);
@@ -27,7 +34,6 @@ function DashCalendar({setActiveComponent}) {
 		setEventSelected(false)
 		console.log(event.id);
 	}
-
 	
 	const handleClick = (info) => {
 		setEvent(info);
@@ -112,49 +118,73 @@ function DashCalendar({setActiveComponent}) {
 }
 
 function Appointments() {
+	const [appointment, setAppointment] = useState(null);
+	const appointmentList = [
+		{
+			id: 1,
+			patient: 'Nombre Apellido',
+			start_date: '2024-11-07T08:00:00',
+			end_date: '2024-11-07T09:00:00',
+		}, {
+			id: 2,
+			patient: 'Nombre Apellido',
+			start_date: '2024-11-07T09:00:00',
+			end_date: '2024-11-07T10:00:00',
+		} ,
+		{
+			id: 3,
+			patient: 'Nombre Apellido',
+			start_date: '2024-11-07T10:00:00',
+			end_date: '2024-11-07T11:00:00',
+		}
+	]
 	return (
 		<>
 			<h1 className="text-2xl font-bold mb-4">Citas</h1>
-			<div className='grid grid-cols-1 md:grid-cols-2 gap-4 p-4 space-y-4'>
-				<Card>
+			<div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+				{appointmentList.map((appointment) => (
+					<Card>
 					<CardContent className="flex pt-4">
 						<div className='grow'>
-						<h2 className="text-lg font-semibold">paciente</h2>
-						<div className="flex items-center text-sm text-muted-foreground mt-1">
-							<Calendar className="h-4 w-4 mr-1" />
-							ahora
+							<h2 className="text-lg font-semibold">{appointment.patient}</h2>
+							<div className="flex items-center text-sm text-muted-foreground mt-1">
+								<Calendar className="h-4 w-4 mr-1" />
+								{format(new Date(appointment.start_date), 'dd/MM/yyyy')}
+							</div>
+							<div className="flex items-center text-sm text-muted-foreground mt-1">
+								<Clock className="h-4 w-4 mr-1" />
+								{format(new Date(appointment.start_date), 'HH:mm')} - {format(new Date(appointment.end_date), 'HH:mm')}
+							</div>
 						</div>
-						<div className="flex items-center text-sm text-muted-foreground mt-1">
-							<Clock className="h-4 w-4 mr-1" />
-							2
+						<div className='m-auto'>
+							<Button onClick={() => setAppointment(appointment)}>
+								<FileText className="h-4 w-4 mr-1" />
+								Detalles
+							</Button>
 						</div>
-						</div>
-						<Button variant="outline" className="mt-4">
-						<User className="h-4 w-4 mr-1" />
-							Ver detalles
-						</Button>
 					</CardContent>
 				</Card>
-				<Card>
-					<CardContent className="flex pt-4">
-						<div className='grow'>
-						<h2 className="text-lg font-semibold">paciente</h2>
-						<div className="flex items-center text-sm text-muted-foreground mt-1">
-							<Calendar className="h-4 w-4 mr-1" />
-							ahora
-						</div>
-						<div className="flex items-center text-sm text-muted-foreground mt-1">
-							<Clock className="h-4 w-4 mr-1" />
-							2
-						</div>
-						</div>
-						<Button variant="outline" className="mt-4">
-						<User className="h-4 w-4 mr-1" />
-							Ver detalles
-						</Button>
-					</CardContent>
-				</Card>
-				
+				))}
+				{appointment && (
+				<Dialog open onOpenChange={setAppointment}>
+					<DialogContent>
+						<DialogHeader>
+							<DialogTitle>
+								Cita #{appointment.id}
+							</DialogTitle>
+							<DialogDescription>
+								Nombre: {appointment.patient} <br />
+								Fecha: {format(new Date(appointment.start_date), 'dd/MM/yyyy')} <br />
+								Inicio: {format(new Date(appointment.start_date), 'HH:mm')} <br />
+								Fin: {format(new Date(appointment.end_date), 'HH:mm')}
+							</DialogDescription>
+							<DialogFooter>
+								<Button variant="outline" onClick={() => setAppointment(false)}>Volver</Button>
+							</DialogFooter>
+						</DialogHeader>
+					</DialogContent>
+				</Dialog>
+				)}
 			</div>
 		</>
 	);
@@ -183,9 +213,9 @@ function Patients() {
 					<div className="flex-grow">
 						<h2 className="text-lg font-semibold">paciente</h2>
 					</div>
-					<Button variant="outline" size="sm">
+					<Button size="sm">
 						<User className="h-4 w-4 mr-1" />
-						Ver detalles
+						Detalles
 					</Button>
 					</CardContent>
 				</Card>
@@ -203,9 +233,7 @@ export default function Dashboard() {
 	const renderComponent = () => {
 		switch (activeComponent) {
 			case 'calendar':
-				return <DashCalendar
-					setActiveComponent={setActiveComponent}
-					/>
+				return <DashCalendar setActiveComponent={setActiveComponent} />
 			case 'appointments':
 				return <Appointments />
 			case 'patients':
@@ -214,27 +242,29 @@ export default function Dashboard() {
 	}
 
 	return (
-		<div className="grid grid-cols-4">
+		<div className={`grid grid-cols-[200px_1fr_1fr_1fr]`}>
 			<aside className="h-full min-h-screen bg-white shadow-md">
 				<div className="p-4">
-					<h2 className="text-2xl font-bold text-gray-800">Dashboard</h2>
+					<h2 className="text-2xl font-bold text-gray-800">
+						Dashboard
+					</h2>
 				</div>
 				<nav className="mt-6">
 					<a onClick={() => setActiveComponent('calendar')} className={`flex items-center px-4 py-2 text-gray-700 ${activeComponent == "calendar" ? "" : "hover:"}bg-gray-200 cursor-pointer`}>
-						<CalendarIcon className="w-5 h-5 mr-2" />
+						<CalendarIcon className="w-6 h-6 mr-3" />
 						Calendario
 					</a>
 					<a onClick={() => setActiveComponent('appointments')} className={`flex items-center px-4 py-2 text-gray-700 ${activeComponent == "appointments" ? "" : "hover:"}bg-gray-200 cursor-pointer`}>
-						<ClipboardListIcon className="w-5 h-5 mr-2" />
+						<ClipboardListIcon className="w-6 h-6 mr-3" />
 						Citas
 					</a>
 					<a onClick={() => setActiveComponent('patients')} className={`flex items-center px-4 py-2 text-gray-700 ${activeComponent == "patients" ? "" : "hover:"}bg-gray-200 cursor-pointer`}>
-						<UsersIcon className="w-5 h-5 mr-2" />
+						<UsersIcon className="w-6 h-6 mr-3" />
 						Pacientes
 					</a>
 					<br />
 					<a onClick={() => handleLogout()} className={`flex items-center px-4 py-2 text-gray-700 hover:bg-gray-200 cursor-pointer`}>
-						<LogOut className="w-5 h-5 mr-2" />
+						<LogOut className="w-6 h-6 mr-3" />
 						Cerrar Sesión
 					</a>
 				</nav>
