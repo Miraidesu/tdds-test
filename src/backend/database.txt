@@ -1,0 +1,70 @@
+-- Tabla: Tipo_usuario
+CREATE TABLE Tipo_usuario (
+    cod_tipo_user INTEGER PRIMARY KEY,
+    tipo_user VARCHAR(20) NOT NULL
+);
+
+-- Tabla: Especialidad
+CREATE TABLE Especialidad (
+    cod_esp INTEGER PRIMARY KEY,
+    nom_esp VARCHAR(30) NOT NULL
+);
+
+-- Tabla: Comuna
+CREATE TABLE Comuna (
+    cod_comuna INTEGER PRIMARY KEY,
+    nom_comuna VARCHAR(30) NOT NULL
+);
+
+-- Tabla: Usuario
+CREATE TABLE Usuario (
+    Rut INTEGER PRIMARY KEY,
+    digito_verificador CHAR(1) NOT NULL,
+    nombre VARCHAR(50) NOT NULL,
+    apellido VARCHAR(50) NOT NULL,
+    fec_nac DATE,
+    direccion VARCHAR(50),
+    cod_comuna INTEGER,
+    email VARCHAR(40) UNIQUE,
+    telefono INTEGER,
+    cod_tipo_user INTEGER,
+    cod_esp INTEGER,
+    password VARCHAR(72) NOT NULL,
+    FOREIGN KEY (cod_comuna) REFERENCES Comuna(cod_comuna),
+    FOREIGN KEY (cod_tipo_user) REFERENCES Tipo_usuario(cod_tipo_user),
+    FOREIGN KEY (cod_esp) REFERENCES Especialidad(cod_esp)
+);
+
+-- Tabla: Consulta
+CREATE TABLE Consulta (
+    cod_consulta INTEGER PRIMARY KEY,
+    cod_reserva INTEGER,
+    motivo VARCHAR(40) NOT NULL,
+    diagnostico VARCHAR(700),
+    FOREIGN KEY (cod_reserva) REFERENCES Reserva(cod_reserva)
+);
+
+-- Tabla: Reserva
+CREATE TABLE Reserva (
+    cod_reserva INTEGER PRIMARY KEY,
+    rut_paciente INTEGER,
+    rut_medico INTEGER,
+    fecha DATE NOT NULL,
+    cod_bloque_hora INTEGER,
+    FOREIGN KEY (rut_paciente) REFERENCES Usuario(Rut),
+    FOREIGN KEY (rut_medico) REFERENCES Usuario(Rut),
+    FOREIGN KEY (cod_bloque_hora) REFERENCES Horas(cod_bloque_hora)
+);
+
+-- Tabla: Horas
+CREATE TABLE Horas (
+    cod_bloque_hora INTEGER PRIMARY KEY,
+    hora VARCHAR(5) NOT NULL
+);
+
+-- Tabla: Preguntas_frecuentes
+CREATE TABLE Preguntas_frecuentes (
+    cod_pregunta INTEGER PRIMARY KEY,
+    pregunta VARCHAR(255) NOT NULL,
+    respuesta TEXT NOT NULL
+);
