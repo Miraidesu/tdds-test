@@ -1,3 +1,8 @@
 Flask==3.0.3
 flask-cors==5.0.0
 bcrypt==4.2.0
+SQLAlchemy==2.0.36
+sqlalchemy-libsql==0.1.0
+python-dotenv==1.0.1
+Flask-SQLAlchemy==3.1.1
+libsql-client==0.3.1
