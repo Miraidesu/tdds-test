@@ -132,8 +132,11 @@ export default function UserScheduling() {
         const result = await response.json();
         alert(result.message);
         navigate("/login");
-      } else {
-        console.error("Error al registrar:", response.statusText);
+      } else if (!response.ok) {
+        const result = await response.json();
+        alert(result.message);
+      }else{
+        console.error("Error al registrar", response.statusText);
       }
     } catch (error) {
       console.error("Error de conexión:", error);
