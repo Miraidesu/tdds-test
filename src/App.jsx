@@ -10,6 +10,7 @@ import UserScheduling from "./pages/UserScheduling"
 import Diagnostic from "./pages/Diagnostic"
 // import Home from './pages/Home';
 import NavBar from './pages/NavBar';
+import Index from './pages';
 
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
         <Route path="/dashboard" element={<Dashboard/>} />
         <Route path="/faq" element={<Faq/>} />
         <Route path="/diagnostic" element={<Diagnostic/>} />
+        <Route path="/index" element={<Index/>} />
       </Routes>
     </Router>
   ) 
