@@ -1,7 +1,13 @@
 import { useState, useMemo, useEffect } from "react";
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { format, subYears } from 'date-fns'
+import ErrorMsg from "@/components/error-msg"
+import { Eye, EyeOff } from "lucide-react"
 import {
   Table,
   TableBody,
@@ -20,6 +26,71 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PlusCircle, Pencil, Trash2, Search } from "lucide-react";
 
+
+const userSchema = z.object({
+  rutNum: z.string()
+    .min(1, "El RUT es requerido")
+    .regex(/^[0-9]+$/, "El RUT debe ser numérico")
+    .min(7, "El RUT debe tener minimo 7 digitos")
+    .max(8, "El RUT debe tener máximo 8 digitos"),
+  rutDig: z.string()
+    .min(1, "El digito verificador es requerido")
+    .regex(/^[0-9kK]+$/, "El digito verificador debe ser un número o K"),
+  name: z.string()
+    .min(1, "El nombre es requerido")
+    .regex(/^[a-zA-Z\s]+$/, "El nombre debe contener solo letras"),
+  birthday: z.string()
+    .min(1, "Ingrese su fecha de nacimiento"),
+  email: z.string()
+    .min(1, "El correo es requerido")
+    .regex(/^[a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)*@[a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)*[.][a-zA-Z]{2,5}$/, 
+      "El correo ingresado es inválido"),
+  phone: z.string()
+    .min(1, "El teléfono es requerido")
+    .regex(/^[0-9]+$/, "El teléfono debe ser numérico")
+    .max(9, "El teléfono debe tener máximo 9 digitos"),
+  password: z.string()
+    .min(8, "La contraseña debe tener al menos 8 caracteres")
+    .regex(/[A-Z]/, "La contraseña debe contener al menos una letra mayúscula.")
+    .regex(/[a-z]/, "La contraseña debe contener al menos una letra minúscula.")
+    .regex(/[0-9]/, "La contraseña debe contener al menos un número.")
+    .regex(/[\W_]/, "La contraseña debe contener al menos un carácter especial."),
+  confirmPassword: z.string().min(1, "Debe confirmar su contraseña"),
+  role: z.string({
+    requied_error: "El rol es requerido"
+  })
+  .min(1, "El rol es requerido")
+})
+.refine((data) => {
+  const dvCalculated = calcularDV(data.rutNum);
+  return dvCalculated.toUpperCase() === data.rutDig.toUpperCase();
+}, {
+  message: "El digito verificador no corresponde al RUT",
+  path: ["rutDig"], // Muestra el error en el campo de digito verificador
+})
+.refine((data) => 
+  data.password === data.confirmPassword, {
+    message: "Las contraseñas no coinciden",
+    path: ["confirmPassword"], // Muestra el error en el campo de confirmación
+});
+
+function calcularDV(rut) {
+  let suma = 0;
+  let multiplicador = 2;
+
+  for (let i = rut.length - 1; i >= 0; i--) {
+    suma += parseInt(rut[i]) * multiplicador;
+    multiplicador = multiplicador === 7 ? 2 : multiplicador + 1;
+  }
+
+  const resto = 11 - (suma % 11);
+  if (resto === 11) return '0';
+  if (resto === 10) return 'K';
+  return `${resto}`;
+}
+
+
+
 export default function CreateProfile() {
   const [profiles, setProfiles] = useState([]);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -27,44 +98,55 @@ export default function CreateProfile() {
   const [searchTerm, setSearchTerm] = useState("");
   const [rolesList, setRolesList] = useState([]);
   const [profileToEdit, setProfileToEdit] = useState(null);
-  const [errors, setErrors] = useState({});
-
-  const validateForm = (formData) => {
-    const errors = {};
-
-    // Validar nombre
-    const name = formData.get("name");
-    if (!/^[A-Za-z\s]+$/.test(name) || name.length > 40 || name.trim().length == 0) {
-      if (name.length == 0){
-        errors.name = "El nombre es obligatorio";
-      }
-      else{
-        errors.name = "El nombre solo debe contener letras y un máximo de 40 caracteres.";
-      }
-    }
+  const [showPassword, setShowPassword] = useState(false);
+  const { register, handleSubmit, formState: { errors }, setValue } = useForm({
+    resolver: zodResolver(userSchema),
+    mode: "onSubmit"
+  });
+  const [selectedRole, setSelectedRole] = useState("");
+  const roles = ["Admin", "Médico", "Secretaria"];
+  const specialties = ["General", "Traumatólogo", "Internista", "Oftalmólogo"];
 
 
-    // Validar email
-    const email = formData.get("email");
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email) || email.trim().length == 0) {
-      if (email.trim().length == 0){
-        errors.email = "El correo electrónico es obligatorio.";
-      }else{
-        errors.email = "El correo electrónico no es válido.";
-      }
-      
-    }
-
-    // Validar rol
-    const role = formData.get("role");
-    if (!role) {
-      errors.role = "Debes seleccionar un rol.";
-    }
-
-    setErrors(errors);
-    return Object.keys(errors).length === 0;
+  const onSubmit = async (data) => {
+    console.log("Datos enviados:", data);
+    // Convertir valores numéricos
+    // data.comuna = Number(data.comuna);
+    // data.phone = Number(data.phone);
+    // data.rutNum = Number(data.rutNum);
+  
+    // try {
+    //   const response = await fetch("http://localhost:5000/api/createProfiles", {
+    //     method: "POST",
+    //     headers: {
+    //       "Content-Type": "application/json"
+    //     },
+    //     body: JSON.stringify(data)
+    //   });
+  
+    //   if (response.ok) {
+    //     const result = await response.json();
+    //     alert(result.message);
+    //     // navigate("/login");
+    //   } else {
+    //     console.error("Error al registrar:", response.statusText);
+    //   }
+    // } catch (error) {
+    //   console.error("Error de conexión:", error);
+    // }
   };
+
+  
+  const handleRoleChange = (role) => {
+    setSelectedRole(role);
+    setValue("role", role);
+    if (role !== "Médico") {
+      setValue("specialty", "");
+    }
+  };
+
+
+
 
   const fetchData = async () => {
     try {
@@ -92,13 +174,15 @@ export default function CreateProfile() {
     setErrors({});
   };
 
+
+
   // para crear nuevos perfiles
 
   const handleAddProfile = async (event) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
 
-    if (!validateForm(formData)) return;
+    // if (!validateForm(formData)) return;
 
     const newProfile = {
         name: formData.get("name"),
@@ -200,7 +284,7 @@ export default function CreateProfile() {
       <div className="flex justify-between items-center mb-4">
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={handleOpenCreateDialog}>
+            <Button>
               <PlusCircle className="h-4 w-4 mr-2" />
               Crear nuevo perfil
             </Button>
@@ -209,31 +293,86 @@ export default function CreateProfile() {
             <DialogHeader>
               <DialogTitle>Crear nuevo perfil</DialogTitle>
             </DialogHeader>
-            <form className="space-y-4" onSubmit={handleAddProfile}>
-              <div>
-                <Label htmlFor="name">Nombre</Label>
-                <Input id="name" name="name" />
-                {errors.name && <p className="text-red-500">{errors.name}</p>}
+            <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
+            <div className="w-full max-w-sm">
+              <Label htmlFor="rut" className="block mb-2">RUT</Label>
+              <div className="flex space-x-2">
+                <Input
+                  {...register('rutNum')}
+                  placeholder="12345678"
+                  className="w-24"
+                />
+                <Input
+                  {...register('rutDig')}
+                  placeholder="K"
+                  className="w-12"
+                />
+              </div>
+              {errors.rutNum ? (
+                <ErrorMsg>{errors.rutNum.message}</ErrorMsg>
+              ) : errors.rutDig ? (
+                <ErrorMsg>{errors.rutDig.message}</ErrorMsg>
+              ) : null}
+            </div>
+              <div className="space-y-2">
+                <Label htmlFor="name">Nombre(s)</Label>
+                <Input {...register('name')} placeholder="Nombre"/>
+                {errors.name && (
+                  <ErrorMsg>{errors.name.message}</ErrorMsg>
+                )}
               </div>
               <div>
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" name="email" type="email"  />
-                {errors.email && <p className="text-red-500">{errors.email}</p>}
+                  <Label htmlFor="email">Email</Label>
+                  <Input id="email" name="email" type="email" {...register('email')} />
+                  {errors.email && (
+                  <ErrorMsg>{errors.email.message}</ErrorMsg>
+                  )}
               </div>
-              <div>
-                <Label htmlFor="role">Rol</Label>
-                <Select id="role" name="role">
+              <div className="space-y-2">
+                <Label htmlFor="birthday">Fecha de nacimiento</Label>
+                <Input type="date" 
+                max={format(subYears(new Date(), 18), "yyyy-MM-dd")} 
+                {...register('birthday')} />
+                {errors.birthday && (
+                <ErrorMsg>{errors.birthday.message}</ErrorMsg>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="phone">Telefono</Label>
+                <Input {...register('phone')} placeholder="912345678"/>
+                {errors.phone && (
+                  <ErrorMsg>{errors.phone.message}</ErrorMsg>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label>Rol</Label>
+                <Select onValueChange={handleRoleChange}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecciona un rol" />
                   </SelectTrigger>
                   <SelectContent>
-                    {rolesList.map((i) => (
-                      <SelectItem key={i.value} value={i.value}>{i.label}</SelectItem>
+                    {roles.map((role) => (
+                      <SelectItem key={role} value={role}>{role}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                {errors.role && <p className="text-red-500">{errors.role}</p>}
+                {errors.role && <ErrorMsg>{errors.role.message}</ErrorMsg>}
               </div>
+                {selectedRole === "Médico" && (
+                <div className="space-y-2">
+                  <Label>Especialidad</Label>
+                  <Select {...register('specialty')}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecciona una especialidad" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {specialties.map((specialty) => (
+                        <SelectItem key={specialty} value={specialty}>{specialty}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <Button type="submit">Crear</Button>
             </form>
           </DialogContent>
@@ -293,32 +432,95 @@ export default function CreateProfile() {
             <DialogTitle>Editar perfil</DialogTitle>
           </DialogHeader>
           {profileToEdit && (
-            <form className="space-y-4" onSubmit={handleUpdateProfile}>
-              <div>
-                <Label htmlFor="edit-name">Nombre</Label>
-                <Input id="edit-name" name="name" defaultValue={profileToEdit.name} required />
-                {errors.name && <p className="text-red-500">{errors.name}</p>}
+            <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
+            <div className="w-full max-w-sm">
+              <Label htmlFor="rut" className="block mb-2">RUT</Label>
+              <div className="flex space-x-2">
+                <Input
+                  {...register('rutNum')}
+                  placeholder="12345678"
+                  className="w-24"
+                  defaultValue={profileToEdit.rutNum}
+                  readOnly
+                />
+                <Input
+                  defaultValue={profileToEdit.rutDig}
+                  {...register('rutDig')}
+                  placeholder="K"
+                  className="w-12"
+                  readOnly
+                />
+              </div>
+              {errors.rutNum ? (
+                <ErrorMsg>{errors.rutNum.message}</ErrorMsg>
+              ) : errors.rutDig ? (
+                <ErrorMsg>{errors.rutDig.message}</ErrorMsg>
+              ) : null}
+            </div>
+              <div className="space-y-2">
+                <Label htmlFor="name">Nombre(s)</Label>
+                <Input {...register('name')} placeholder="Nombre" 
+                defaultValue={profileToEdit.name}/>
+                {errors.name && (
+                  <ErrorMsg>{errors.name.message}</ErrorMsg>
+                )}
               </div>
               <div>
-                <Label htmlFor="edit-email">Email</Label>
-                <Input id="edit-email" name="email" type="email" defaultValue={profileToEdit.email} required />
-                {errors.email && <p className="text-red-500">{errors.email}</p>}
+                  <Label htmlFor="email">Email</Label>
+                  <Input id="email" name="email" type="email" {...register('email')} 
+                  defaultValue={profileToEdit.email}/>
+                  {errors.email && (
+                  <ErrorMsg>{errors.email.message}</ErrorMsg>
+                  )}
               </div>
-              <div>
-                <Label htmlFor="edit-role">Rol</Label>
-                <Select id="edit-role" name="role" defaultValue={profileToEdit.role} required>
+              <div className="space-y-2">
+                <Label htmlFor="birthday">Fecha de nacimiento</Label>
+                <Input type="date" 
+                max={format(subYears(new Date(), 18), "yyyy-MM-dd")} 
+                {...register('birthday')}
+                defaultValue={profileToEdit.birthday} />
+                {errors.birthday && (
+                <ErrorMsg>{errors.birthday.message}</ErrorMsg>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="phone">Telefono</Label>
+                <Input {...register('phone')} placeholder="912345678"
+                defaultValue={profileToEdit.phone}/>
+                {errors.phone && (
+                  <ErrorMsg>{errors.phone.message}</ErrorMsg>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label>Rol</Label>
+                <Select onValueChange={handleRoleChange} defaultValue={profileToEdit.role}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecciona un rol" />
                   </SelectTrigger>
                   <SelectContent>
-                    {rolesList.map((i) => (
-                      <SelectItem key={i.value} value={i.value}>{i.label}</SelectItem>
+                    {roles.map((role) => (
+                      <SelectItem key={role} value={role}>{role}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                {errors.role && <p className="text-red-500">{errors.role}</p>}
+                {errors.role && <ErrorMsg>{errors.role.message}</ErrorMsg>}
               </div>
-              <Button type="submit">Actualizar</Button>
+                {selectedRole === "Médico" && (
+                <div className="space-y-2">
+                  <Label>Especialidad</Label>
+                  <Select {...register('specialty')} defaultValue={profileToEdit.specialty}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecciona una especialidad" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {specialties.map((specialty) => (
+                        <SelectItem key={specialty} value={specialty}>{specialty}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              <Button type="submit">Crear</Button>
             </form>
           )}
         </DialogContent>
