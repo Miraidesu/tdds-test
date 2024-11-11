@@ -303,6 +303,7 @@
 #     app.run(debug=True)
 
 import os
+from xml.sax import parseString
 import bcrypt
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -312,6 +313,23 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
+def calcular_dv(rut):
+    suma = 0
+    multiplicador = 2
+
+    # Iterar de derecha a izquierda sobre los dígitos del RUT
+    for digito in reversed(str(rut)):
+        suma += int(digito) * multiplicador
+        multiplicador = 2 if multiplicador == 7 else multiplicador + 1
+
+    resto = 11 - (suma % 11)
+    if resto == 11:
+        return '0'
+    elif resto == 10:
+        return 'K'
+    else:
+        return str(resto)
 
 
 
@@ -332,6 +350,10 @@ engine = create_engine(f"{DB_URL}?authToken={AUTH_TOKEN}")
 def register_user():
     data = request.json
 
+#     query_email = text("""
+#     SELECT * FROM USUARIO WHERE email = :email
+# """)
+#     params_email = {"email" : data["email"]}
     # Hashear la contraseña antes de guardarla
     hashed_password = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt())
 
@@ -387,36 +409,52 @@ def register_user():
             connection.commit()
         return jsonify({"message": "Usuario registrado con éxito"}), 201
     except Exception as e:
-        print("Error al registrar usuario:", str(e))
-        return jsonify({"message": "Error al registrar usuario", "error": str(e)}), 500
+        print(e)
+        if "UNIQUE constraint failed: Usuario.Rut" in str(e):
+            return jsonify({"message": "Rut ya registrado"}), 409
+        elif "UNIQUE constraint failed: Usuario.email" in str(e):
+            return jsonify({"message": "email ya registrado"}), 409
+        else:
+            return jsonify({"message": "Error al registrar usuario", "error": str(e)}), 500
 
 @app.route('/api/login', methods=['POST'])
 def login():
     data = request.json
     rut_num = data.get("rutNum")
+    rut_dig = data.get("rutDig")
     password = data.get("password")
 
-    # Convertir RUT a número si es necesario
-    try:
-        rut_num = int(rut_num)
-    except ValueError:
-        return jsonify({'message': "El RUT debe ser un número"}), 400
+    # Calcular el dígito verificador esperado
+    dig = calcular_dv(rut_num)
 
-    # Consultar en la base de datos para obtener el hash de la contraseña del usuario
-    with engine.connect() as conn:
-        query = text("SELECT password FROM Usuario WHERE Rut = :rut")
-        result = conn.execute(query, {"rut": rut_num}).fetchone()
+    # Normalizar ambos dígitos verificadores a mayúsculas y como strings para evitar errores
+    if str(dig).upper() == str(rut_dig).upper():
+        
+        # Convertir RUT a número si es necesario
+        try:
+            rut_num = int(rut_num)
+        except ValueError:
+            return jsonify({'message': "El RUT debe ser un número"}), 400
 
-        # Verificar si el usuario existe
-        if result is None:
-            return jsonify({'message': "Datos incorrectos"}), 401
+        # Consultar en la base de datos para obtener el hash de la contraseña del usuario
+        with engine.connect() as conn:
+            query = text("SELECT password FROM Usuario WHERE Rut = :rut")
+            result = conn.execute(query, {"rut": rut_num}).fetchone()
 
-        # Validar la contraseña usando bcrypt
-        stored_password_hash = result[0]
-        if bcrypt.checkpw(password.encode('utf-8'), stored_password_hash.encode('utf-8')):
-            return jsonify({'message': "Login exitoso"}), 200
-        else:
-            return jsonify({'message': "Datos incorrectos"}), 401
+            # Verificar si el usuario existe
+            if result is None:
+                return jsonify({'message': "Datos incorrectos"}), 401
+
+            # Validar la contraseña usando bcrypt
+            stored_password_hash = result[0]
+            if bcrypt.checkpw(password.encode('utf-8'), stored_password_hash.encode('utf-8')):
+                return jsonify({'message': "Login exitoso"}), 200
+            else:
+                return jsonify({'message': "Datos incorrectos"}), 401
+    else:
+        print(f"RUT ingresado: {data['rutNum']}, DV calculado: {dig}, DV ingresado: {data['rutDig']}")
+        return jsonify({'message': "Datos incorrectos"}), 401
+
         
 
 # Ruta para registrar una reserva

@@ -22,6 +22,7 @@ export default function Login() {
   const onSubmit = async (data) => {
     // Convertir valores numéricos
     data.rutNum = Number(data.rutNum);
+    data.rutDig = Number(data.rutDig);
     data.phone = Number(data.phone);
 
     try {
