@@ -557,7 +557,7 @@ def manage_profiles():
                 })
 
                 if result.rowcount == 0:
-                    return jsonify({"message": "Perfil no encontrado"}), 404
+                    return jsonify({"message": "Perfil no se ha encontrado"}), 404
 
             return jsonify({"message": "Perfil actualizado correctamente"}), 200
 
@@ -584,5 +584,3 @@ def manage_profiles():
 # Run the app
 if __name__ == '__main__':
     app.run(debug=True)
-
-    
