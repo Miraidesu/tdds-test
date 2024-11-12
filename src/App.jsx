@@ -7,8 +7,7 @@ import Login from "./pages/Login"
 import Register from "./pages/Register"
 import UserScheduling from "./pages/UserScheduling"
 import Diagnostic from "./pages/Diagnostic"
-import Index from './pages';
-
+import Index from './pages/Index';
 
 function App() {
   return (
