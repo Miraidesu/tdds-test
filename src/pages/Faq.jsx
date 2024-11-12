@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { AlignJustify } from "lucide-react";
+import NavBar from "./NavBar";
 
 const userSchema = z.object({
 	titulo: z.string()
@@ -54,7 +55,8 @@ export default function Faq() {
 
 
   	return (
-	<>
+	<div className="mt-[60px]">
+		<NavBar />
 		{isAdmin &&
 			<Card className={`${!barActive ? "flex" : ""} m-8 md:m-auto md:my-8 md:w-[768px]`}>
 				<Button 
@@ -118,6 +120,6 @@ export default function Faq() {
 				</Accordion>
 			))}
 		</div>
-	</>
+	</div>
 	)
 }
