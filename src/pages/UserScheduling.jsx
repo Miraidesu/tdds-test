@@ -17,7 +17,7 @@ import { Calendar } from "@/components/ui/calendar"
 import { Label } from "@/components/ui/label"
 import { useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
-import { format, parse } from "date-fns";
+import { format, parse, addHours } from "date-fns";
 
 export default function UserScheduling() {
   const [userValid, setUserValid] = useState(false)
@@ -65,11 +65,16 @@ useEffect(() => {
 }, []);
 
   const onSubmit = async () => {
+    const fecha = parse(`${date}T${timeSlot}`, "yyyy-MM-dd'T'HH:mm", new Date());
+    const fecha_ter = addHours(fecha, 1)
+    const fec_inicio = format(fecha, "yyyy-MM-dd'T'HH:mm:ss")
+    const fech_termino = format(fecha_ter, "yyyy-MM-dd'T'HH:mm:ss")
     const data = {
-      service,
-      date,
-      doctor,
-      timeSlot,
+      "rutPaciente": 20279999,
+      "rutMedico": doctor,
+      "especialidad": service,
+      "fechaInicio": fec_inicio,
+      "fechaTermino": fech_termino
     };
 
     console.log(data)
