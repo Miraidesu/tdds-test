@@ -15,7 +15,8 @@ import { bg } from "date-fns/locale";
 
 export default function NavBar() {
 	return (
-	<header className="flex justify-center">
+    <div className="bg-white fixed top-0 left-0 w-full z-10 shadow-md">
+	<header className="relative flex justify-center ">
     <NavigationMenu>
       <NavigationMenuList>
 
@@ -43,16 +44,18 @@ export default function NavBar() {
           </NavigationMenuLink>
         </NavigationMenuItem>
 
-        <NavigationMenuItem>
-          <NavigationMenuTrigger>Cuenta</NavigationMenuTrigger>
-          <NavigationMenuContent className="grid gap-3 p-4">
-            <Login/>
+        <NavigationMenuItem >
+          <NavigationMenuLink className={navigationMenuTriggerStyle()}>
             <Link to="/register">Registrarse</Link>
-          </NavigationMenuContent>
+          </NavigationMenuLink>
+        </NavigationMenuItem>
+
+        <NavigationMenuItem >
+          <Login />
         </NavigationMenuItem>
       
       </NavigationMenuList> 
     </NavigationMenu>
 	</header>
-	)
+	</div>)
 }
