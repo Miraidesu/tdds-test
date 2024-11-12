@@ -21,13 +21,14 @@ def registrar_reservas():
     # Recoge los datos de la reserva desde el JSON
     rut_paciente = data.get("rutPaciente")
     rut_medico = data.get("rutMedico")
+    especialidad = data.get("especialidad")
     fec_inicio = data.get("fechaInicio")
     fec_termino = data.get("fechaTermino")
 
     # Inserta la reserva en la tabla Reserva
     insert_query = text("""
-        INSERT INTO Reserva (rut_paciente, rut_medico, fec_inicio, fec_termino)
-        VALUES (:rut_paciente, :rut_medico, :fec_inicio, :fec_termino)
+        INSERT INTO Reserva (rut_paciente, rut_medico, especialidad, fec_inicio, fec_termino)
+        VALUES (:rut_paciente, :rut_medico, :especialidad, :fec_inicio, :fec_termino)
     """)
 
     try:
@@ -35,6 +36,7 @@ def registrar_reservas():
             conn.execute(insert_query, {
                 "rut_paciente": rut_paciente,
                 "rut_medico": rut_medico,
+                "especialidad": especialidad,
                 "fec_inicio": fec_inicio,
                 "fec_termino": fec_termino
             })
