@@ -91,15 +91,15 @@ function calcularDV(rut) {
 }
 
 const comunas = {
-  0: "Alto del Carmen",
-  1: "Caldera",
-  2: "Chañaral",
-  3: "Copiapo",
-  4: "Diego de Almagro",
-  5: "Freirina",
-  6: "Huasco",
-  7: "Tierra Amarilla",
-  8: "Vallenar"
+  1: "Alto del Carmen",
+  2: "Caldera",
+  3: "Chañaral",
+  4: "Copiapo",
+  5: "Diego de Almagro",
+  6: "Freirina",
+  7: "Huasco",
+  8: "Tierra Amarilla",
+  9: "Vallenar"
 }
 
 export default function UserScheduling() {
