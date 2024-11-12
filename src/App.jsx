@@ -7,6 +7,7 @@ import Login from "./pages/Login"
 import Register from "./pages/Register"
 import UserScheduling from "./pages/UserScheduling"
 import Diagnostic from "./pages/Diagnostic"
+import EmailConfirmed from './pages/EmailConfirmed';
 import Index from './pages/Index';
 
 function App() {
@@ -14,6 +15,7 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<Index />} />
+        <Route path="/index" element={<Index />} />
         <Route path="/userSchedule" element={<UserScheduling />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
@@ -21,6 +23,7 @@ function App() {
         <Route path="/dashboard" element={<Dashboard/>} />
         <Route path="/faq" element={<Faq/>} />
         <Route path="/diagnostic" element={<Diagnostic/>} />
+        <Route path="/confirmar" element={<EmailConfirmed/>} />
       </Routes>
     </Router>
   ) 
