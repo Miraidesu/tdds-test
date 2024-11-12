@@ -19,10 +19,10 @@ import { useNavigate } from "react-router-dom";
 
 export default function UserScheduling() {
   const [userValid, setUserValid] = useState(false)
-  const [service, setService]   = useState()
-  const [date, setDate]         = useState()
-  const [doctor, setDoctor]     = useState()
-  const [timeSlot, setTimeSlot] = useState()
+  const [service, setService]   = useState("")
+  const [date, setDate]         = useState(null)
+  const [doctor, setDoctor]     = useState("")
+  const [timeSlot, setTimeSlot] = useState("")
 
   const [serviceList, setServiceList] = useState([]);
   const [doctorList, setDoctorList] = useState([]);
@@ -34,29 +34,30 @@ export default function UserScheduling() {
 
   const navigate = useNavigate();
 
-  const getUserType = async () => {
-    const response = await fetch("http://localhost:5000/get_credentials", {
-      method: "GET", // Tipo de solicitud
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include", // Esto asegura que las cookies se envíen con la solicitud
-    });
   
-    if (response.ok) {
-      const data = await response.json();
-      if (data.user_type === 2) {
-        return setUserValid(true)
-      }
-      navigate("/");
-    } else {
-      navigate("/");
-    }
-  };
 
-  useEffect(() => {
-    getUserType();
-  }, []);
+useEffect(() => {
+    const getUserType = async () => {
+      const response = await fetch("http://localhost:5000/get_credentials", {
+        method: "GET", // Tipo de solicitud
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include", // Esto asegura que las cookies se envíen con la solicitud
+      });
+    
+      if (response.ok) {
+        const data = await response.json();
+        if (data.user_type === 1) {
+          return setUserValid(true)
+        }
+        navigate("/");
+      } else {
+        navigate("/");
+      }
+    };
+    getUserType()
+}, []);
 
   const onSubmit = async () => {
     const data = {
@@ -87,45 +88,71 @@ export default function UserScheduling() {
     }
   };
 
+  useEffect(() => {
+    const fetchServicios = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/api/userSchedule/servicios");
+        const data = await response.json();
+        setServiceList(data);
+      } catch (error) {
+        console.error("Error al obtener servicios:", error);
+      }
+    };
+    fetchServicios()
+  }, []); 
 
-  // useEffect(() => {
-  //   const fetchServicios = async () => {
-  //     try {
-  //       const response = await fetch("http://localhost:5000/api/userSchedule/servicios");
-  //       const data = await response.json();
-  //       setServiceList(data);
-  //     } catch (error) {
-  //       console.error("Error al obtener servicios:", error);
-  //     }
-  //   };
-  //   fetchServicios();
-  // }, []);
+  useEffect(() => {
+    const fetchMedicos = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/api/userSchedule/medicos");
+        const data = await response.json();
+        setDoctorList(data);
+        console.log(data)
+      } catch (error) {
+        console.error("Error al obtener médicos:", error);
+      }
+    };
+    fetchMedicos();
+  }, [date]);
 
-  // useEffect(() => {
-  //   const fetchMedicos = async () => {
-  //     try {
-  //       const response = await fetch("http://localhost:5000/api/userSchedule/medicos");
-  //       const data = await response.json();
-  //       setDoctorList(data);
-  //     } catch (error) {
-  //       console.error("Error al obtener médicos:", error);
-  //     }
-  //   };
-  //   fetchMedicos();
-  // }, []);
+  useEffect(() => {
+    const fetchHorarios = async () => {
+      try {
+        const response = await fetch(`http://localhost:5000/api/userSchedule/horarios/${doctor}`);
+        const data = await response.json();
+        setTimeSlotList(data);
+        console.log(data)
+      } catch (error) {
+        console.error("Error al obtener horarios:", error);
+      }
+    };
+    fetchHorarios();
+  }, [doctor]);
 
-  // useEffect(() => {
-  //   const fetchHorarios = async () => {
-  //     try {
-  //       const response = await fetch("http://localhost:5000/api/userSchedule/horarios");
-  //       const data = await response.json();
-  //       setTimeSlotList(data);
-  //     } catch (error) {
-  //       console.error("Error al obtener horarios:", error);
-  //     }
-  //   };
-  //   fetchHorarios();
-  // }, []);
+  const handleService = (value) => {
+    const selectedService = serviceList.find((i) => i.label === value);
+  if (selectedService) {
+    setService(selectedService.value);
+  }
+  };
+
+  const handleDoctor = (value) => {
+    const selectedDoctor = doctorList.find((i) => i.label === value);
+    if (selectedDoctor) {
+      setDoctor(selectedDoctor.value);
+    }
+  };
+
+  const timeSlots = [
+    "08:00",
+    "09:00",
+    "10:00",
+    "11:00",
+    "12:00",
+    "13:00",
+    "14:00",
+    "15:00"
+  ]
 
   if (userValid) {
     return (
@@ -141,16 +168,16 @@ export default function UserScheduling() {
 
               <div className="space-y-2">
                 <Label htmlFor="servicio">¿Qué servicio necesita?</Label>
-                <Select onValueChange={(v) => setService(v)} required>
+                <Select onValueChange={handleService} required>
                   <SelectTrigger id="servicio">
                     <SelectValue placeholder="Seleccionar servicio" />
                   </SelectTrigger>
                   <SelectContent>
                     {serviceList.map((i) => 
-                      <SelectItem value={i.value}>{i.label}</SelectItem>
+                      <SelectItem value={i.label}>{i.label}</SelectItem>
                     )}
                   </SelectContent>
-                </Select >
+                </Select>
               </div>
 
               { service ?
@@ -168,13 +195,13 @@ export default function UserScheduling() {
               { date ?
               <div className="space-y-2">
                 <Label htmlFor="medico">Seleccionar médico</Label>
-                <Select onValueChange={(v) => setDoctor(v)} required>
+                <Select onValueChange={handleDoctor} required>
                   <SelectTrigger id="medico">
                     <SelectValue placeholder="Seleccionar medico" />
                   </SelectTrigger>
                   <SelectContent>
                     {doctorList.map((i) => 
-                      <SelectItem value={i.value}>{i.label}</SelectItem>
+                      <SelectItem value={i.label}>{i.label}</SelectItem>
                     )}
                   </SelectContent>
                 </Select>
