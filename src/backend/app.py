@@ -303,7 +303,6 @@
 #     app.run(debug=True)
 
 import os
-from xml.sax import parseString
 import bcrypt
 from datetime import timedelta
 from flask import Flask, request, jsonify, make_response
@@ -312,10 +311,9 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.exc import SQLAlchemyError
 from dotenv import load_dotenv
 from flask_jwt_extended import (
-	JWTManager, 
-    get_jwt_identity,
-	create_access_token, 
-	jwt_required )
+	JWTManager)
+
+from auth import auth_bp
 
 load_dotenv()
 
@@ -344,150 +342,17 @@ FLASK_SECRET_KEY = os.getenv("SECRET_KEY")
 app = Flask(__name__)
 app.config["SECRET_KEY"] = FLASK_SECRET_KEY
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=1)
-CORS(app, resources={r"/*": {"origins": "http://localhost:5173", "supports_credentials": True}})
-JWTManager(app)
 
-# Set up SQLAlchemy engine
-engine = create_engine(f"{DB_URL}?authToken={AUTH_TOKEN}")
+app.register_blueprint(auth_bp)
 
-
-# API Routes
-@app.route('/api/register', methods=['POST'])
-def register_user():
-    data = request.json
-
-#     query_email = text("""
-#     SELECT * FROM USUARIO WHERE email = :email
-# """)
-#     params_email = {"email" : data["email"]}
-    # Hashear la contraseña antes de guardarla
-    hashed_password = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt())
-
-    # Construir la consulta SQL con los valores
-    query = text("""
-        INSERT INTO Usuario (
-            Rut, 
-            digito_verificador, 
-            nombre, 
-            apellido, 
-            fec_nac, 
-            direccion, 
-            cod_comuna, 
-            email, 
-            telefono, 
-            cod_tipo_user, 
-            cod_esp, 
-            password
-        ) VALUES (
-            :rutNum, 
-            :rutDig, 
-            :name, 
-            :surname, 
-            :birthday, 
-            :direccion, 
-            :comuna, 
-            :email, 
-            :phone, 
-            1, 
-            NULL, 
-            :password
-        )
-    """)
-
-    # Preparar los datos para la consulta
-    params = {
-        'rutNum': data['rutNum'],
-        'rutDig': data['rutDig'],
-        'name': data['name'],
-        'surname': data['surname'],
-        'birthday': data['birthday'],
-        'direccion': data['direccion'],
-        'comuna': data['comuna'],
-        'email': data['email'],
-        'phone': data['phone'],
-        'password': hashed_password.decode('utf-8')  # Guardar el hash como string
+CORS(app, resources={r"/*": {
+    "origins": "http://localhost:5173", 
+    "supports_credentials": True
     }
-
-    # Ejecutar la consulta y manejar la transacción
-    try:
-        with engine.connect() as connection:
-            connection.execute(query, params)
-            connection.commit()
-        return jsonify({"message": "Usuario registrado con éxito"}), 201
-    except Exception as e:
-        print(e)
-        if "UNIQUE constraint failed: Usuario.Rut" in str(e):
-            return jsonify({"message": "Rut ya registrado"}), 409
-        elif "UNIQUE constraint failed: Usuario.email" in str(e):
-            return jsonify({"message": "email ya registrado"}), 409
-        else:
-            return jsonify({"message": "Error al registrar usuario", "error": str(e)}), 500
-
-@app.route('/api/login', methods=['POST'])
-def login():
-    data = request.json
-    rut_num = data.get("rutNum")
-    password = data.get("password")
-
-    # Calcular el dígito verificador esperado
-    # dig = calcular_dv(rut_num)
-
-    # Normalizar ambos dígitos verificadores a mayúsculas y como strings para evitar errores
-        
-        # Convertir RUT a número si es necesario
-    try:
-        rut_num = int(rut_num)
-    except ValueError:
-        return jsonify({'message': "El RUT debe ser un número"}), 400
-
-    # Consultar en la base de datos para obtener el hash de la contraseña del usuario
-    with engine.connect() as conn:
-        query = text("SELECT password FROM Usuario WHERE Rut = :rut")
-        result = conn.execute(query, {"rut": rut_num}).fetchone()
-
-        # Verificar si el usuario existe
-        if result is None:
-            return jsonify({'message': "Datos incorrectos"}), 401
-
-        # Validar la contraseña usando bcrypt
-        stored_password_hash = result[0]
-        if bcrypt.checkpw(password.encode('utf-8'), stored_password_hash.encode('utf-8')):
-            user_type = None
-            query = text("SELECT cod_tipo_user FROM Usuario WHERE Rut = :rut")
-            result = conn.execute(query, {"rut": rut_num}).fetchone()
-
-            if result is not None:
-                user_type = result[0]
-
-            access_token = create_access_token(identity={
-                "user": rut_num,
-                "user_type": user_type
-            })
-
-            response = make_response(jsonify({
-                'message': "Login exitoso",
-                "data": {
-                    "user": rut_num,
-                    "user_type": user_type
-                }}))
-            response.set_cookie(
-                key="access_token_cookie", value=access_token,
-                httponly=True,
-                samesite='Strict',
-                secure=False
-            )
-
-            return response, 200
-        else:
-            return jsonify({'message': "Datos incorrectos"}), 401
-        
-    return jsonify({'message': "Datos incorrectos"}), 401
-
-@app.route("/get_credentials", methods=["GET"])
-@jwt_required(locations=["cookies"]) 
-def get_credentials():
-    current_user = get_jwt_identity()
-    return jsonify(current_user), 200
+})
+JWTManager(app)
+# Set up SQLAlchemy engine
+engine = create_engine(f"sqlite+{DB_URL}?authToken={AUTH_TOKEN}")
 
 # Ruta para registrar una reserva
 @app.route('/api/userSchedule', methods=['POST'])
@@ -542,7 +407,7 @@ def get_medicos():
             query = text("""
                 SELECT Rut, nombre || ' ' || apellido AS nombre_completo
                 FROM Usuario
-                WHERE cod_tipo_user = (SELECT cod_tipo_user FROM Tipo_usuario WHERE tipo_user = 'medico')
+                WHERE cod_tipo_user = (SELECT cod_tipo_user FROM Tipo_usuario WHERE tipo_user = 'Medico')
             """)
             result = conn.execute(query).fetchall()
             medicos = [{"value": row[0], "label": row[1]} for row in result]
@@ -552,12 +417,13 @@ def get_medicos():
         print(f"Error al obtener los médicos: {e}")
         return jsonify({"message": "Ocurrió un error al obtener los médicos"}), 500
 
-# Ruta para obtener los horarios disponibles
-@app.route('/api/userSchedule/horarios', methods=['GET'])
-def get_horarios():
+# Ruta para obtener los horarios disponibles DEL MEDICO
+@app.route('/api/userSchedule/horarios/<int:rut>', methods=['GET'])
+def get_horarios(rut):
     try:
         with engine.connect() as conn:
-            result = conn.execute(text("SELECT cod_bloque_hora, hora FROM Horas")).fetchall()
+            query = text("SELECT fec_inicio FROM Reserva WHERE rut_medico = :rut")
+            result = conn.execute(query, {"rut": rut}).fetchall()
             horarios = [{"value": row[0], "label": row[1]} for row in result]
         return jsonify(horarios)
 
