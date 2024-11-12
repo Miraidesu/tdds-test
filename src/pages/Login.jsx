@@ -31,13 +31,14 @@ export default function Login() {
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify(data)
+        body: JSON.stringify(data),
+        credentials: "include"
       });
 
       if (response.ok) {
         const result = await response.json();
         alert(result.message);
-        navigate("/userSchedule");
+        // navigate("/userSchedule");
       } else {
         const result = await response.json();
         alert(result.message);
