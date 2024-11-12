@@ -48,8 +48,10 @@ CREATE TABLE Reserva (
     cod_reserva INTEGER PRIMARY KEY,
     rut_paciente INTEGER,
     rut_medico INTEGER,
+    especialidad INTEGER,
     fec_inicio DATE,
     fec_termino DATE,
+    FOREIGN KEY (especialidad) REFERENCES Especialidad(cod_esp),
     FOREIGN KEY (rut_paciente) REFERENCES Usuario(Rut),
     FOREIGN KEY (rut_medico) REFERENCES Usuario(Rut),
 );
