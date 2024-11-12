@@ -11,6 +11,7 @@ from flask_jwt_extended import (
 
 from auth import auth_bp
 from schedule import schedule_bp
+from dashboard import dashboard_bp
 
 load_dotenv()
 
@@ -25,6 +26,7 @@ app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=1)
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(schedule_bp)
+app.register_blueprint(dashboard_bp)
 
 CORS(app, resources={r"/*": {
     "origins": "http://localhost:5173", 
