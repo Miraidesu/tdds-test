@@ -21,76 +21,7 @@ engine = create_engine(f"sqlite+{DB_URL}?authToken={AUTH_TOKEN}")
 
 auth_bp = Blueprint('auth_bp', __name__)
 
-@auth_bp.route('/api/register', methods=['POST'])
-def register_user():
-    data = request.json
 
-#     query_email = text("""
-#     SELECT * FROM USUARIO WHERE email = :email
-# """)
-#     params_email = {"email" : data["email"]}
-    # Hashear la contraseña antes de guardarla
-    hashed_password = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt())
-
-    # Construir la consulta SQL con los valores
-    query = text("""
-        INSERT INTO Usuario (
-            Rut, 
-            digito_verificador, 
-            nombre, 
-            apellido, 
-            fec_nac, 
-            direccion, 
-            cod_comuna, 
-            email, 
-            telefono, 
-            cod_tipo_user, 
-            cod_esp, 
-            password
-        ) VALUES (
-            :rutNum, 
-            :rutDig, 
-            :name, 
-            :surname, 
-            :birthday, 
-            :direccion, 
-            :comuna, 
-            :email, 
-            :phone, 
-            1, 
-            NULL, 
-            :password
-        )
-    """)
-
-    # Preparar los datos para la consulta
-    params = {
-        'rutNum': data['rutNum'],
-        'rutDig': data['rutDig'],
-        'name': data['name'],
-        'surname': data['surname'],
-        'birthday': data['birthday'],
-        'direccion': data['direccion'],
-        'comuna': data['comuna'],
-        'email': data['email'],
-        'phone': data['phone'],
-        'password': hashed_password.decode('utf-8')  # Guardar el hash como string
-    }
-
-    # Ejecutar la consulta y manejar la transacción
-    try:
-        with engine.connect() as connection:
-            connection.execute(query, params)
-            connection.commit()
-        return jsonify({"message": "Usuario registrado con éxito"}), 201
-    except Exception as e:
-        print(e)
-        if "UNIQUE constraint failed: Usuario.Rut" in str(e):
-            return jsonify({"message": "Rut ya registrado"}), 409
-        elif "UNIQUE constraint failed: Usuario.email" in str(e):
-            return jsonify({"message": "email ya registrado"}), 409
-        else:
-            return jsonify({"message": "Error al registrar usuario", "error": str(e)}), 500
 
 @auth_bp.route('/api/login', methods=['POST'])
 def login():
@@ -111,7 +42,7 @@ def login():
 
     # Consultar en la base de datos para obtener el hash de la contraseña del usuario
     with engine.connect() as conn:
-        query = text("SELECT password FROM Usuario WHERE Rut = :rut")
+        query = text("SELECT password FROM Usuario WHERE Rut = :rut AND confirmado = TRUE")
         result = conn.execute(query, {"rut": rut_num}).fetchone()
 
         # Verificar si el usuario existe
