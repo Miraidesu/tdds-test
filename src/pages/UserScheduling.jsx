@@ -15,8 +15,10 @@ import { Select,
   SelectValue } from "@/components/ui/select"
 import { Calendar } from "@/components/ui/calendar"
 import { Label } from "@/components/ui/label"
+import { useNavigate } from "react-router-dom";
 
 export default function UserScheduling() {
+  const [userValid, setUserValid] = useState(false)
   const [service, setService]   = useState()
   const [date, setDate]         = useState()
   const [doctor, setDoctor]     = useState()
@@ -29,6 +31,32 @@ export default function UserScheduling() {
   const { handleSubmit, register, formState: { errors }, setValue } = useForm({
     mode: "onChange"
   });
+
+  const navigate = useNavigate();
+
+  const getUserType = async () => {
+    const response = await fetch("http://localhost:5000/get_credentials", {
+      method: "GET", // Tipo de solicitud
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include", // Esto asegura que las cookies se envíen con la solicitud
+    });
+  
+    if (response.ok) {
+      const data = await response.json();
+      if (data.user_type === 2) {
+        return setUserValid(true)
+      }
+      navigate("/");
+    } else {
+      navigate("/");
+    }
+  };
+
+  useEffect(() => {
+    getUserType();
+  }, []);
 
   const onSubmit = async () => {
     const data = {
@@ -60,47 +88,47 @@ export default function UserScheduling() {
   };
 
 
-  useEffect(() => {
-    const fetchServicios = async () => {
-      try {
-        const response = await fetch("http://localhost:5000/api/userSchedule/servicios");
-        const data = await response.json();
-        setServiceList(data);
-      } catch (error) {
-        console.error("Error al obtener servicios:", error);
-      }
-    };
-    fetchServicios();
-  }, []);
+  // useEffect(() => {
+  //   const fetchServicios = async () => {
+  //     try {
+  //       const response = await fetch("http://localhost:5000/api/userSchedule/servicios");
+  //       const data = await response.json();
+  //       setServiceList(data);
+  //     } catch (error) {
+  //       console.error("Error al obtener servicios:", error);
+  //     }
+  //   };
+  //   fetchServicios();
+  // }, []);
 
-  useEffect(() => {
-    const fetchMedicos = async () => {
-      try {
-        const response = await fetch("http://localhost:5000/api/userSchedule/medicos");
-        const data = await response.json();
-        setDoctorList(data);
-      } catch (error) {
-        console.error("Error al obtener médicos:", error);
-      }
-    };
-    fetchMedicos();
-  }, []);
+  // useEffect(() => {
+  //   const fetchMedicos = async () => {
+  //     try {
+  //       const response = await fetch("http://localhost:5000/api/userSchedule/medicos");
+  //       const data = await response.json();
+  //       setDoctorList(data);
+  //     } catch (error) {
+  //       console.error("Error al obtener médicos:", error);
+  //     }
+  //   };
+  //   fetchMedicos();
+  // }, []);
 
-  useEffect(() => {
-    const fetchHorarios = async () => {
-      try {
-        const response = await fetch("http://localhost:5000/api/userSchedule/horarios");
-        const data = await response.json();
-        setTimeSlotList(data);
-      } catch (error) {
-        console.error("Error al obtener horarios:", error);
-      }
-    };
-    fetchHorarios();
-  }, []);
+  // useEffect(() => {
+  //   const fetchHorarios = async () => {
+  //     try {
+  //       const response = await fetch("http://localhost:5000/api/userSchedule/horarios");
+  //       const data = await response.json();
+  //       setTimeSlotList(data);
+  //     } catch (error) {
+  //       console.error("Error al obtener horarios:", error);
+  //     }
+  //   };
+  //   fetchHorarios();
+  // }, []);
 
-  return (
-
+  if (userValid) {
+    return (
     <div className="bg-slate-950 max-h-svh">
       <Card className="w-[325px] max-w-md mx-auto">
         <CardHeader>
@@ -180,5 +208,6 @@ export default function UserScheduling() {
         </CardFooter>
       </Card>
     </div>
-  )
+    )
+  }
 }
