@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import Login from './Login';
 import NavBar from './NavBar';
 import { Calendar, Clock, Users, MessageSquare, ChevronRight } from 'lucide-react';
 
@@ -24,7 +25,7 @@ export default function Index() {
                     <span className="block text-blue-200 xl:inline">tu familia</span>
                   </h1>
                   <p className="mt-3 text-base text-blue-100 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
-                    Nuestro hospital está comprometido con brindar atención médica de calidad y bienestar a nuestra comunidad.
+                    Cecosf San Miguel está comprometido con brindar atención médica de calidad y bienestar a nuestra comunidad.
                   </p>
                 </div>
               </main>
@@ -49,12 +50,7 @@ export default function Index() {
             >
               Regístrate aquí
             </Link>
-            <Link
-              to="/login"
-              className="bg-gray-200 text-gray-800 px-6 py-2 rounded-md hover:bg-gray-300 transition-colors"
-            >
-              Ya tengo cuenta
-            </Link>
+            <Login/>
           </div>
         </section>
 
@@ -265,7 +261,7 @@ export default function Index() {
             </a>
           </div>
           <div className="mt-8 md:mt-0 md:order-1">
-            <p className="text-center text-base text-gray-400">&copy; 2023 Hospital. Todos los derechos reservados.</p>
+            <p className="text-center text-base text-gray-400">&copy; 2024 Cecosf San Miguel. Todos los derechos reservados.</p>
           </div>
         </div>
       </footer>

@@ -1,13 +1,15 @@
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 
-import CreateProfile from "./pages/CreateProfile"
-import Dashboard from "./pages/Dashboard"
+import CreateProfile from "./pages/CreateProfile";
+import Dashboard from "./pages/Dashboard";
 import Faq from './pages/Faq';
-import Login from "./pages/Login"
-import Register from "./pages/Register"
-import UserScheduling from "./pages/UserScheduling"
-import Diagnostic from "./pages/Diagnostic"
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import UserScheduling from "./pages/UserScheduling";
+import Diagnostic from "./pages/Diagnostic";
 import Index from './pages/Index';
+import Appointments from './pages/Appointments';
+
 
 function App() {
   return (
@@ -21,6 +23,7 @@ function App() {
         <Route path="/dashboard" element={<Dashboard/>} />
         <Route path="/faq" element={<Faq/>} />
         <Route path="/diagnostic" element={<Diagnostic/>} />
+        <Route path="/Appointments" element={<Appointments/>} />
       </Routes>
     </Router>
   ) 
