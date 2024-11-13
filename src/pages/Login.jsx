@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { useState } from "react"
 import {
   Dialog,
   DialogContent,
@@ -12,18 +13,42 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
+import { z } from 'zod';
+import ErrorMsg from "@/components/error-msg"
+import { zodResolver } from '@hookform/resolvers/zod';
+
+
+
+
+const userSchema = z.object({
+  rutNum: z.string()
+    .min(1, "El RUT es requerido")
+    .regex(/^[0-9]+$/, "El RUT debe ser numérico")
+    .min(7, "El RUT debe tener minimo 7 digitos")
+    .max(8, "El RUT debe tener máximo 8 digitos"),
+  rutDig: z.string()
+    .min(1, "El digito verificador es requerido")
+    .regex(/^[0-9kK]+$/, "El digito verificador debe ser un número o K"),
+  password: z.string()
+    .min(1, "Ingrese su contraseña"),
+})
+
+
+
+
 
 export default function Login() {
   const { handleSubmit, register, formState: { errors }, setValue } = useForm({
+    resolver : zodResolver(userSchema),
     mode: "onChange"
   });
+  const [isOpen, setIsOpen] = useState(false)
   const navigate = useNavigate();
 
   const onSubmit = async (data) => {
     // Convertir valores numéricos
     data.rutNum = Number(data.rutNum);
     data.rutDig = Number(data.rutDig);
-    data.phone = Number(data.phone);
 
     try {
       const response = await fetch("http://localhost:5000/api/login", {
@@ -38,7 +63,8 @@ export default function Login() {
       if (response.ok) {
         const result = await response.json();
         alert(result.message);
-        // navigate("/userSchedule");
+        setIsOpen(false)
+        
       } else {
         const result = await response.json();
         alert(result.message);
@@ -49,7 +75,7 @@ export default function Login() {
   };
 
   return (
-    <Dialog>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button variant="outline">Ingresar</Button>
       </DialogTrigger>
@@ -70,14 +96,20 @@ export default function Login() {
                 id="rutNum"
                 placeholder="12345678"
                 className="col-span-2"
-                {...register("rutNum", { required: true })}
+                {...register("rutNum")}
               />
               <Input
                 id="rutDig"
                 placeholder="K"
-                {...register("rutDig", { required: true })}
+                {...register("rutDig",)}
               />
+              
             </div>
+            {errors.rutNum ? (
+                  <ErrorMsg>{errors.rutNum.message}</ErrorMsg>
+                ) : errors.rutDig ? (
+                  <ErrorMsg>{errors.rutDig.message}</ErrorMsg>
+                ) : null}
             <div className="grid grid-cols-6 items-center gap-4"> 
               <Label htmlFor="password" className="text-right col-span-2">
                 Contraseña
@@ -89,6 +121,7 @@ export default function Login() {
                 {...register("password", { required: true })}
               />
             </div>
+            {errors.password && <ErrorMsg>{errors.password.message}</ErrorMsg>}
           </div>
           <DialogFooter className="grid grid-cols-6 gap-4">
             <Button type="submit" className="col-start-2 col-span-4">Entrar</Button>
