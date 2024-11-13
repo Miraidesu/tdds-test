@@ -102,9 +102,7 @@ export default function Faq() {
         const data = await response.json();
         console.log(data);
         setIsAdmin(data["user_type"] === 5);
-      } else {
-        navigate("/");
-      }
+      } 
     };
 
     getUserType();
