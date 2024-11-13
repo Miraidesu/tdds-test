@@ -113,15 +113,15 @@ export default function Appointments() {
     try {
       console.log("Deleting appointment...");
       console.log("Appointment ID:", appointmentId);
-
       const response = await fetch(
-        `http://localhost:5000/api/appointments`,
+        `http://localhost:5000/api/appointments/${appointmentId}`,
         {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
           },
           credentials: "include",
+          body: JSON.stringify({ appointment_id: appointmentId }),
         }
       );
 

@@ -17,15 +17,13 @@ engine = create_engine(f"sqlite+{DB_URL}?authToken={AUTH_TOKEN}", connect_args={
 
 appoint_bp = Blueprint('appoint_bp', __name__)
 
-@appoint_bp.route('/api/appointments', methods=['GET', 'DELETE'])
+@appoint_bp.route('/api/appointments', methods=['GET'])
 @jwt_required(locations=["cookies"])
 def handle_appointments():
     user_id = get_jwt_identity().get("user")
 
     if request.method == 'GET':
         return get_appointments(user_id)
-    elif request.method == 'DELETE':
-        return delete_appointment(user_id)
 
 def get_appointments(user_id):
     try:
@@ -77,27 +75,25 @@ def get_appointments(user_id):
         print(f"Unexpected error: {str(e)}")
         return jsonify({"error": "Unexpected error occurred"}), 500
 
-def delete_appointment(user_id):
+@appoint_bp.route('/api/appointments/<int:appointment_id>', methods=['DELETE'])
+def delete_appointment(appointment_id):
     try:
-        data = request.json
-        appointment_id = data.get('id')
-
         if not appointment_id:
             return jsonify({"error": "Appointment ID is required"}), 400
 
-        print(f"Deleting appointment - user_id: {user_id}, appointment_id: {appointment_id}")
+        # print(f"Deleting appointment - user_id: {user_id}, appointment_id: {appointment_id}")
 
         query = text("""
             DELETE FROM Reserva
-            WHERE cod_reserva = :appointment_id AND rut_paciente = :rut_paciente
+            WHERE cod_reserva = :appointment_id
         """)
         
         with engine.connect() as connection:
-            result = connection.execute(query, {"appointment_id": appointment_id, "rut_paciente": user_id})
+            result = connection.execute(query, {"appointment_id": appointment_id})
             connection.commit()
 
             if result.rowcount == 0:
-                print(f"Appointment not found or unauthorized - appointment_id: {appointment_id}, user_id: {user_id}")
+                # print(f"Appointment not found or unauthorized - appointment_id: {appointment_id}, user_id: {user_id}")
                 return jsonify({"error": "Appointment not found or unauthorized"}), 404
 
         print(f"Appointment deleted successfully - appointment_id: {appointment_id}")
