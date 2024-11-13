@@ -17,9 +17,6 @@ import { z } from 'zod';
 import ErrorMsg from "@/components/error-msg"
 import { zodResolver } from '@hookform/resolvers/zod';
 
-
-
-
 const userSchema = z.object({
   rutNum: z.string()
     .min(1, "El RUT es requerido")
@@ -33,15 +30,12 @@ const userSchema = z.object({
     .min(1, "Ingrese su contraseña"),
 })
 
-
-
-
-
 export default function Login() {
   const { handleSubmit, register, formState: { errors }, setValue } = useForm({
     resolver : zodResolver(userSchema),
     mode: "onChange"
   });
+
   const [isOpen, setIsOpen] = useState(false)
   const navigate = useNavigate();
 
@@ -64,7 +58,11 @@ export default function Login() {
         const result = await response.json();
         alert(result.message);
         setIsOpen(false)
-        
+        navigate("/temp");
+        setTimeout(() => {
+          navigate("/");
+        }, 1);
+
       } else {
         const result = await response.json();
         alert(result.message);

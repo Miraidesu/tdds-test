@@ -8,6 +8,7 @@ import {
 import Login from "./Login";
 import { Link, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from "react";
+import { is } from "date-fns/locale";
 
 export default function NavBar() {
   const [userLogged, setUserLogged] = useState(false);
@@ -37,6 +38,10 @@ export default function NavBar() {
     }
   };
 
+  useEffect(() => {
+    isUserLogged();
+  }, []);
+
   const handleLogout = async () => {
     try {
       const response = await fetch("http://localhost:5000/logout", {
@@ -57,9 +62,6 @@ export default function NavBar() {
     }
   };
 
-  useEffect(() => {
-    isUserLogged();
-  }, []);
 
   return (
     <div className="fixed z-10 top-0 left-0 w-full p-2 bg-white shadow-md">

@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from '@/components/ui/textarea'
 import ErrorMsg from "@/components/error-msg"
 import { useNavigate } from 'react-router-dom'
+import { ArrowLeft } from 'lucide-react'
 
 const userSchema = z.object({
   codigoReserva: z.string(),
@@ -61,6 +62,9 @@ export default function DoctorsDiagnostic() {
       <Card className="w-full max-w-3xl">
         <form onSubmit={handleSubmit(onSubmit)}>
           <CardHeader>
+          <Button variant="outline" className="m-0 p-0 w-8 h-8" onClick={() => navigate("/dashboard")}>
+            <ArrowLeft />
+          </Button>
             <CardTitle>Consulta</CardTitle>
             <CardDescription>Ingrese los datos de la consulta</CardDescription>
           </CardHeader>

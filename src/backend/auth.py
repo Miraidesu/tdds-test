@@ -127,9 +127,10 @@ def login():
 
     # Consultar en la base de datos para obtener el hash de la contraseña del usuario
     with engine.connect() as conn:
-        query = text("SELECT password FROM Usuario WHERE Rut = :rut AND confirmado = TRUE")
+        query = text("SELECT password, cod_tipo_user FROM Usuario WHERE Rut = :rut AND confirmado = TRUE")
         result = conn.execute(query, {"rut": rut_num}).fetchone()
 
+        print(result)
         # Verificar si el usuario existe
         if result is None:
             return jsonify({'message': "Datos incorrectos"}), 401
@@ -138,11 +139,9 @@ def login():
         stored_password_hash = result[0]
         if bcrypt.checkpw(password.encode('utf-8'), stored_password_hash.encode('utf-8')):
             user_type = None
-            query = text("SELECT cod_tipo_user FROM Usuario WHERE Rut = :rut")
-            result = conn.execute(query, {"rut": rut_num}).fetchone()
 
-            if result is not None:
-                user_type = result[0]
+            if result[1] is not None:
+                user_type = result[1]
 
             access_token = create_access_token(identity={
                 "user": rut_num,

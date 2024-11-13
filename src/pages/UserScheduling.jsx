@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label"
 import { useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format, parse, addHours } from "date-fns";
+import { ArrowLeft } from "lucide-react";
 
 export default function UserScheduling() {
   const [userValid, setUserValid] = useState(false)
@@ -135,7 +136,7 @@ useEffect(() => {
       try {
         const response = await fetch(`http://localhost:5000/api/userSchedule/horarios/${doctor}`);
         const data = await response.json();
-           
+        
         const timeSlots = [
           {hora: "08:00", state: true},
           {hora: "09:00", state: true},
@@ -190,9 +191,13 @@ useEffect(() => {
   
   if (userValid) {
     return (
-    <div className="bg-slate-950 max-h-svh">
+    <div className="bg-slate-950 min-h-svh">
       <Card className="w-[325px] max-w-md mx-auto">
         <CardHeader>
+          <Button variant="outline" className="m-0 p-0 w-8 h-8" onClick={() => navigate("/")}>
+            <ArrowLeft />
+          </Button>
+          
           <CardTitle>Reserva de hora</CardTitle>
           <CardDescription>Descripcion</CardDescription>
         </CardHeader>
