@@ -18,6 +18,7 @@ export default function Appointments() {
   const [sortBy, setSortBy] = useState("fec_inicio");
   const [userValid, setUserValid] = useState(false);
   const navigate = useNavigate();
+  const today = new Date();
 
   const getUserCredentials = useCallback(async () => {
     try {
@@ -111,6 +112,8 @@ export default function Appointments() {
 
   const handleDelete = async (appointmentId) => {
     try {
+      const confirmDelete = window.confirm("¿Estás seguro de que deseas cancelar esta cita?");
+      if (!confirmDelete) return;
       console.log("Deleting appointment...");
       console.log("Appointment ID:", appointmentId);
       const response = await fetch(
@@ -182,41 +185,49 @@ export default function Appointments() {
         </Select>
       </div>
       <div className="space-y-4">
-        {appointments.map((appointment) => (
-          <Card key={appointment.id}>
-            <CardContent className="flex items-center p-4">
-              <div className="flex-grow">
-                <h2 className="text-lg font-semibold flex items-center">
-                  <Stethoscope className="h-5 w-5 mr-2" />
-                  {appointment.specialty}
-                </h2>
-                <div className="flex items-center text-sm text-muted-foreground mt-1">
-                  <User className="h-4 w-4 mr-1" />
-                  Doctor ID: {appointment.doctor_id}
+        {appointments.map((appointment) => {
+          const endDate = new Date(appointment.end_date);
+
+          return (
+            <Card key={appointment.id}>
+              <CardContent className="flex items-center p-4">
+                <div className="flex-grow">
+                  <h2 className="text-lg font-semibold flex items-center">
+                    <Stethoscope className="h-5 w-5 mr-2" />
+                    {appointment.specialty}
+                  </h2>
+                  <div className="flex items-center text-sm text-muted-foreground mt-1">
+                    <User className="h-4 w-4 mr-1" />
+                    Nombre Doctor: {appointment.doctor_name}
+                  </div>
+                  <div className="flex items-center text-sm text-muted-foreground mt-1">
+                    <Calendar className="h-4 w-4 mr-1" />
+                    Inicio: {formatDate(appointment.start_date)}
+                  </div>
+                  <div className="flex items-center text-sm text-muted-foreground mt-1">
+                    <Clock className="h-4 w-4 mr-1" />
+                    Término: {formatDate(appointment.end_date)}
+                  </div>
                 </div>
-                <div className="flex items-center text-sm text-muted-foreground mt-1">
-                  <Calendar className="h-4 w-4 mr-1" />
-                  Inicio: {formatDate(appointment.start_date)}
-                </div>
-                <div className="flex items-center text-sm text-muted-foreground mt-1">
-                  <Clock className="h-4 w-4 mr-1" />
-                  Término: {formatDate(appointment.end_date)}
-                </div>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleDelete(appointment.id)}
-              >
-                Cancelar
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
+                
+                {endDate >= today && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDelete(appointment.id)}
+                  >
+                    Cancelar
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
     </div>
   );
 }
+
 
 // "use client"
 

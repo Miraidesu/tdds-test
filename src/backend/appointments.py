@@ -38,10 +38,18 @@ def get_appointments(user_id):
             return jsonify({"error": f"Invalid sort column: {sort}"}), 422
         
         query = text(f"""
-            SELECT cod_reserva, rut_medico, especialidad, fec_inicio, fec_termino
-            FROM Reserva
-            WHERE rut_paciente = :rut_paciente
-            AND (especialidad LIKE :search OR rut_medico LIKE :search)
+            SELECT 
+                R.cod_reserva, 
+                U.rut AS rut_medico,
+                CONCAT(U.nombre, ' ', U.apellido) AS nombre_medico, 
+                E.nom_esp AS especialidad, 
+                R.fec_inicio, 
+                R.fec_termino
+            FROM Reserva R
+            JOIN Usuario U ON R.rut_medico = U.Rut
+            JOIN Especialidad E ON R.especialidad = E.cod_esp
+            WHERE R.rut_paciente = :rut_paciente
+            AND (E.nom_esp LIKE :search OR U.nombre LIKE :search OR U.apellido LIKE :search)
             ORDER BY {sort}
         """)
         
@@ -57,9 +65,10 @@ def get_appointments(user_id):
                 {
                     "id": row[0],
                     "doctor_id": row[1],
-                    "specialty": row[2],
-                    "start_date": row[3],
-                    "end_date": row[4]
+                    "doctor_name": row[2],
+                    "specialty": row[3],
+                    "start_date": row[4],
+                    "end_date": row[5]
                 }
                 for row in appointments
             ]
