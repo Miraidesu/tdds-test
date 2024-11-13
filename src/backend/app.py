@@ -3,7 +3,7 @@ from datetime import timedelta
 from flask import Flask
 
 from flask_cors import CORS
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, modifier
 from sqlalchemy.exc import SQLAlchemyError
 from dotenv import load_dotenv
 from flask_jwt_extended import (
@@ -15,6 +15,7 @@ from dashboard import dashboard_bp
 from profiles import profiles_bp
 from appointments import appoint_bp
 from faq import faq_bp
+from modify import modify_bp
 
 load_dotenv()
 
@@ -41,6 +42,7 @@ app.register_blueprint(dashboard_bp)
 app.register_blueprint(profiles_bp)
 app.register_blueprint(appoint_bp)
 app.register_blueprint(faq_bp)
+app.register_blueprint(modify_bp)
 
 mail.init_app(app)
 

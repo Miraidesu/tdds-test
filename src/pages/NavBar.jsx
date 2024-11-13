@@ -104,14 +104,17 @@ export default function NavBar() {
               </>
             )}
 
-            {userRole === 5 && (
-              <>
+
+            {userLogged && (
+              <div className="flex">
                 <NavigationMenuItem>
                   <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                    <Link to="/CrearPerfiles">Ver Trabajadores</Link>
+                    <Link to="/modificar">Editar Perfil</Link>
                   </NavigationMenuLink>
                 </NavigationMenuItem>
-              </>
+
+                
+              </div>
             )}
 
             {!userLogged ? (
@@ -129,7 +132,7 @@ export default function NavBar() {
             ) : (
               <NavigationMenuItem>
                 <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                  <Link to="/" onClick={handleLogout}>Cerrar sesión</Link>
+                  <Link to="/index" onClick={handleLogout}>Cerrar sesión</Link>
                 </NavigationMenuLink>
               </NavigationMenuItem>
             )}

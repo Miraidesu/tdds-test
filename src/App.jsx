@@ -11,6 +11,7 @@ import Diagnostic from "./pages/Diagnostic"
 import EmailConfirmed from './pages/EmailConfirmed';
 import Index from './pages/Index';
 import Appointments from './pages/Appointments';
+import Modify from './pages/ModifyUser'
 
 
 function App() {
@@ -28,6 +29,7 @@ function App() {
         <Route path="/diagnostic" element={<Diagnostic/>} />
         <Route path="/Appointments" element={<Appointments/>} />
         <Route path="/confirmar" element={<EmailConfirmed/>} />
+        <Route path='/modificar' element={<Modify/>}/>
 
       </Routes>
     </Router>
