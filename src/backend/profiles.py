@@ -27,14 +27,15 @@ def manage_profiles():
                     roles_list.append({"value": row.value, "label": row.label})
                 print("Roles list:", roles_list)  # Agregar log
 
-                profiles_query = text("SELECT Rut AS id, nombre, apellido, email, cod_tipo_user AS role FROM Usuario WHERE cod_tipo_user <> 1")
+                profiles_query = text("SELECT Rut, nombre, apellido, email, (SELECT tipo_user FROM Tipo_usuario WHERE cod_tipo_user=Usuario.cod_tipo_user) AS role, telefono FROM Usuario WHERE cod_tipo_user <> 1")
                 profiles_list = []
                 for row in conn.execute(profiles_query):
                     profiles_list.append({
-                        "rut": row.id,
+                        "rut": row.Rut,
                         "name": row.nombre,
                         "lastname": row.apellido,
                         "email": row.email,
+                        "phone": row.telefono,
                         "role": row.role
                     })
                 print("Profiles list:", profiles_list)  # Agregar log
@@ -43,8 +44,6 @@ def manage_profiles():
         except SQLAlchemyError as e:
             print("Error al obtener perfiles:", e)
             return jsonify({"message": "Error al obtener perfiles", "error": str(e)}), 500
-
-
 
     # POST: Añadir un nuevo perfil
     elif request.method == "POST":
@@ -77,15 +76,15 @@ def manage_profiles():
         try:
             with engine.connect() as conn:
                 update_query = text("""
-                    UPDATE Usuario SET nombre = :nombre, apellido = :apellido, email = :email, cod_tipo_user = :role
+                    UPDATE Usuario SET nombre = :nombre, apellido = :apellido, email = :email, telefono = :telefono
                     WHERE Rut = :rut
                 """)
                 result = conn.execute(update_query, {
-                    "rut": data["rut"],
                     "nombre": data["name"],
                     "apellido": data["lastname"],
                     "email": data["email"],
-                    "role": data["role"]
+                    "telefono": data["phone"],
+                    "rut": data["rut"]
                 })
 
                 if result.rowcount == 0:

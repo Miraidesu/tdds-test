@@ -50,17 +50,9 @@ const userSchema = z.object({
     .min(1, "El teléfono es requerido")
     .regex(/^[0-9]+$/, "El teléfono debe ser numérico")
     .max(9, "El teléfono debe tener máximo 9 digitos"),
-  password: z.string()
-    .min(8, "La contraseña debe tener al menos 8 caracteres")
-    .regex(/[A-Z]/, "La contraseña debe contener al menos una letra mayúscula.")
-    .regex(/[a-z]/, "La contraseña debe contener al menos una letra minúscula.")
-    .regex(/[0-9]/, "La contraseña debe contener al menos un número.")
-    .regex(/[\W_]/, "La contraseña debe contener al menos un carácter especial."),
-  confirmPassword: z.string().min(1, "Debe confirmar su contraseña"),
-  role: z.string({
-    requied_error: "El rol es requerido"
+  role: z.number({
+    required_error: "El rol es requerido"
   })
-  .min(1, "El rol es requerido")
 })
 .refine((data) => {
   const dvCalculated = calcularDV(data.rutNum);
@@ -68,11 +60,6 @@ const userSchema = z.object({
 }, {
   message: "El digito verificador no corresponde al RUT",
   path: ["rutDig"], // Muestra el error en el campo de digito verificador
-})
-.refine((data) => 
-  data.password === data.confirmPassword, {
-    message: "Las contraseñas no coinciden",
-    path: ["confirmPassword"], // Muestra el error en el campo de confirmación
 });
 
 function calcularDV(rut) {
@@ -90,34 +77,54 @@ function calcularDV(rut) {
   return resto;
 }
 
-
-
 export default function CreateProfile() {
   const [profiles, setProfiles] = useState([]);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [rolesList, setRolesList] = useState([]);
-  const [profileToEdit, setProfileToEdit] = useState(null);
-  const [showPassword, setShowPassword] = useState(false);
+
   const { register, handleSubmit, formState: { errors }, setValue } = useForm({
     resolver: zodResolver(userSchema),
-    mode: "onSubmit"
+    mode: "onChange"
   });
   const [selectedRole, setSelectedRole] = useState("");
 
-
-
-
-
   const onSubmit = async (data) => {
-    console.log("Datos enviados:", data);
-
+    data.phone = Number(data.phone);
+    data.rutNum = Number(data.rutNum);
+    console.log(data);
   };
 
+  const onSubmitEdit = async (data) => {
+    data.phone = Number(data.phone);
+    data.rutNum = Number(data.rutNum);
+    console.log(data);
+  };
 
+  const resetValues = () => {
+    setValue("rutNum", "");
+    setValue("rutDig", "");
+    setValue("name", "");
+    setValue("lastname", "");
+    setValue("email", "");
+    setValue("phone", "");
+    setValue("role", "");
+  }
 
-
+  const handleEditProfile = (profile) => {
+    setValue("rutNum", profile.rut);  // RUT número
+    setValue("rutDig", profile.dv);  // Dígito verificador
+    setValue("name", profile.name);  // Nombre
+    setValue("lastname", profile.lastname);  // Apellido
+    setValue("email", profile.email);  // Correo
+    setValue("phone", profile.phone);  // Teléfono
+    setValue("role", profile.role);  // Rol
+    
+    // Abrir el diálogo de edición
+    setIsEditDialogOpen(true);
+  };
 
   const fetchData = async () => {
     try {
@@ -136,27 +143,55 @@ export default function CreateProfile() {
     fetchData();
   }, []);
 
+  const handleRole = (role) => {
+    const selectedRole = rolesList.find((r) => r.label === role);
+    setSelectedRole(selectedRole.value);
+    setValue("role", selectedRole.value);
+  }
+
   const filteredProfiles = useMemo(() => {
     return profiles.filter(profile =>
       profile.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [profiles, searchTerm]);
 
-  const handleOpenCreateDialog = () => {
-    setIsCreateDialogOpen(true);
-    setErrors({});
-  };
-
-
-
-
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Gestión de perfiles</h1>
       <div className="flex justify-between items-center mb-4">
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar perfil</DialogTitle>
+          </DialogHeader>
+          <form className="space-y-4" onSubmit={handleSubmit(onSubmitEdit)}>
+            <div className="space-y-2">
+              <Label htmlFor="name">Nombre(s)</Label>
+              <Input {...register('name')} placeholder="Nombre"/>
+              {errors.name && <ErrorMsg>{errors.name.message}</ErrorMsg>}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="lastname">Apellido</Label>
+              <Input {...register('lastname')} placeholder="Apellido"/>
+              {errors.lastname && <ErrorMsg>{errors.lastname.message}</ErrorMsg>}
+            </div>
+            <div>
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" name="email" placeholder="correo@mail.cl" type="email" {...register('email')} />
+              {errors.email && <ErrorMsg>{errors.email.message}</ErrorMsg>}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="phone">Teléfono</Label>
+              <Input {...register('phone')} placeholder="912345678"/>
+              {errors.phone && <ErrorMsg>{errors.phone.message}</ErrorMsg>}
+            </div>
+            <Button>Guardar cambios</Button>
+          </form>
+        </DialogContent>
+      </Dialog>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button onClick={resetValues}>
               <PlusCircle className="h-4 w-4 mr-2" />
               Crear nuevo perfil
             </Button>
@@ -166,26 +201,26 @@ export default function CreateProfile() {
               <DialogTitle>Crear nuevo perfil</DialogTitle>
             </DialogHeader>
             <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
-            <div className="w-full max-w-sm">
-              <Label htmlFor="rut" className="block mb-2">RUT</Label>
-              <div className="flex space-x-2">
-                <Input
-                  {...register('rutNum')}
-                  placeholder="12345678"
-                  className="w-24"
-                />
-                <Input
-                  {...register('rutDig')}
-                  placeholder="K"
-                  className="w-12"
-                />
+              <div className="w-full max-w-sm">
+                <Label htmlFor="rut" className="block mb-2">RUT</Label>
+                <div className="flex space-x-2">
+                  <Input
+                    {...register('rutNum')}
+                    placeholder="12345678"
+                    className="w-24"
+                  />
+                  <Input
+                    {...register('rutDig')}
+                    placeholder="K"
+                    className="w-12"
+                  />
+                </div>
+                {errors.rutNum ? (
+                  <ErrorMsg>{errors.rutNum.message}</ErrorMsg>
+                ) : errors.rutDig ? (
+                  <ErrorMsg>{errors.rutDig.message}</ErrorMsg>
+                ) : null}
               </div>
-              {errors.rutNum ? (
-                <ErrorMsg>{errors.rutNum.message}</ErrorMsg>
-              ) : errors.rutDig ? (
-                <ErrorMsg>{errors.rutDig.message}</ErrorMsg>
-              ) : null}
-            </div>
               <div className="space-y-2">
                 <Label htmlFor="name">Nombre(s)</Label>
                 <Input {...register('name')} placeholder="Nombre"/>
@@ -216,7 +251,7 @@ export default function CreateProfile() {
               </div>
               <div className="space-y-2">
                 <Label>Rol</Label>
-                <Select>
+                <Select onValueChange={(v) => handleRole(v)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecciona un rol" />
                   </SelectTrigger>
@@ -230,7 +265,7 @@ export default function CreateProfile() {
                 </Select>
                 {errors.role  && <ErrorMsg>{errors.role.message}</ErrorMsg>}
               </div>
-                {selectedRole === "Médico" && (
+                {/* {selectedRole === "Medico" && (
                 <div className="space-y-2">
                   <Label>Especialidad</Label>
                   <Select {...register('specialty')}>
@@ -244,8 +279,8 @@ export default function CreateProfile() {
                     </SelectContent>
                   </Select>
                 </div>
-              )}
-              <Button type="submit">Crear</Button>
+              )} */}
+              <Button>Crear</Button>
             </form>
           </DialogContent>
         </Dialog>
@@ -264,6 +299,7 @@ export default function CreateProfile() {
         <TableHeader>
           <TableRow>
             <TableHead>Nombre</TableHead>
+            <TableHead>Apellido</TableHead>
             <TableHead>Email</TableHead>
             <TableHead>Rol</TableHead>
             <TableHead>Opciones</TableHead>
@@ -271,8 +307,9 @@ export default function CreateProfile() {
         </TableHeader>
         <TableBody>
           {filteredProfiles.map((profile) => (
-            <TableRow key={profile.id}>
+            <TableRow>
               <TableCell>{profile.name}</TableCell>
+              <TableCell>{profile.lastname}</TableCell>
               <TableCell>{profile.email}</TableCell>
               <TableCell>{profile.role}</TableCell>
               <TableCell>
@@ -283,14 +320,6 @@ export default function CreateProfile() {
                 >
                   <Pencil className="h-4 w-4" />
                   <span className="sr-only">Editar</span>
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleDeleteProfile(profile.id)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                  <span className="sr-only">Eliminar</span>
                 </Button>
               </TableCell>
             </TableRow>
