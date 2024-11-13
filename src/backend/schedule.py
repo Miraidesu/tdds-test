@@ -21,13 +21,14 @@ def registrar_reservas():
     # Recoge los datos de la reserva desde el JSON
     rut_paciente = data.get("rutPaciente")
     rut_medico = data.get("rutMedico")
-    fecha = data.get("date")
-    cod_bloque_hora = data.get("timeSlot")
+    especialidad = data.get("especialidad")
+    fec_inicio = data.get("fechaInicio")
+    fec_termino = data.get("fechaTermino")
 
     # Inserta la reserva en la tabla Reserva
     insert_query = text("""
-        INSERT INTO Reserva (rut_paciente, rut_medico, fecha, cod_bloque_hora)
-        VALUES (:rut_paciente, :rut_medico, :fecha, :cod_bloque_hora)
+        INSERT INTO Reserva (rut_paciente, rut_medico, especialidad, fec_inicio, fec_termino)
+        VALUES (:rut_paciente, :rut_medico, :especialidad, :fec_inicio, :fec_termino)
     """)
 
     try:
@@ -35,8 +36,9 @@ def registrar_reservas():
             conn.execute(insert_query, {
                 "rut_paciente": rut_paciente,
                 "rut_medico": rut_medico,
-                "fecha": fecha,
-                "cod_bloque_hora": cod_bloque_hora
+                "especialidad": especialidad,
+                "fec_inicio": fec_inicio,
+                "fec_termino": fec_termino
             })
             conn.commit()
         return jsonify({"message": "Reserva registrada exitosamente."}), 201
@@ -83,7 +85,7 @@ def get_horarios(rut):
         with engine.connect() as conn:
             query = text("SELECT fec_inicio FROM Reserva WHERE rut_medico = :rut")
             result = conn.execute(query, {"rut": rut}).fetchall()
-            horarios = [{"value": row[0], "label": row[1]} for row in result]
+            horarios = [row[0] for row in result]
         return jsonify(horarios)
 
     except SQLAlchemyError as e:

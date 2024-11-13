@@ -131,11 +131,13 @@ export default function UserScheduling() {
       if (response.ok) {
         const result = await response.json();
         alert(result.message);
-        navigate("/login");
+        navigate("/index");
       } else if (!response.ok) {
         const result = await response.json();
         alert(result.message);
+        console.error("Error al registrar", response.statusText);
       }else{
+        alert(result.message);
         console.error("Error al registrar", response.statusText);
       }
     } catch (error) {
@@ -288,6 +290,7 @@ export default function UserScheduling() {
           </section>
           <Button type="button" variant="outline" className="col-start-2 col-span-4" onClick={() => navigate("/crearPerfiles")}>Ir a crear Perfiles (Temporal)</Button>
           <Button type="button" variant="outline" className="col-start-2 col-span-4" onClick={() => navigate("/diagnostic")}>Ir a Diagnostico (Temporal)</Button>
+
         </main>
         </CardContent>
       </form>
