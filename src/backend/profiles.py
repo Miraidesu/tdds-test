@@ -20,19 +20,31 @@ def manage_profiles():
     # GET: Obtener la lista de roles y perfiles
     if request.method == "GET":
         try:
-            # Consulta para obtener los tipos de usuario (roles)
             with engine.connect() as conn:
-                roles_query = text("SELECT cod_tipo_user AS value, tipo_user AS label FROM Tipo_usuario")
-                roles_list = [dict(row) for row in conn.execute(roles_query).fetchall()]
+                roles_query = text("SELECT cod_tipo_user AS value, tipo_user AS label FROM Tipo_usuario WHERE cod_tipo_user <> 1" )
+                roles_list = []
+                for row in conn.execute(roles_query):
+                    roles_list.append({"value": row.value, "label": row.label})
+                print("Roles list:", roles_list)  # Agregar log
 
-                # Consulta para obtener la lista de perfiles
-                profiles_query = text("SELECT Rut AS id, nombre, apellido, email, cod_tipo_user AS role FROM Usuario")
-                profiles_list = [dict(row) for row in conn.execute(profiles_query).fetchall()]
-
+                profiles_query = text("SELECT Rut AS id, nombre, apellido, email, cod_tipo_user AS role FROM Usuario WHERE cod_tipo_user <> 1")
+                profiles_list = []
+                for row in conn.execute(profiles_query):
+                    profiles_list.append({
+                        "rut": row.id,
+                        "name": row.nombre,
+                        "lastname": row.apellido,
+                        "email": row.email,
+                        "role": row.role
+                    })
+                print("Profiles list:", profiles_list)  # Agregar log
             return jsonify({"roles_list": roles_list, "profiles_list": profiles_list}), 200
 
         except SQLAlchemyError as e:
+            print("Error al obtener perfiles:", e)
             return jsonify({"message": "Error al obtener perfiles", "error": str(e)}), 500
+
+
 
     # POST: Añadir un nuevo perfil
     elif request.method == "POST":
