@@ -3,7 +3,6 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -18,12 +17,18 @@ engine = create_engine(f"sqlite+{DB_URL}?authToken={AUTH_TOKEN}", connect_args={
 
 appoint_bp = Blueprint('appoint_bp', __name__)
 
-@appoint_bp.route('/api/appointments', methods=['GET'])
-@jwt_required()
-def get_appointments():
-    print("get_appointments function called")
+@appoint_bp.route('/api/appointments', methods=['GET', 'DELETE'])
+@jwt_required(locations=["cookies"])
+def handle_appointments():
+    user_id = get_jwt_identity().get("user")
+
+    if request.method == 'GET':
+        return get_appointments(user_id)
+    elif request.method == 'DELETE':
+        return delete_appointment(user_id)
+
+def get_appointments(user_id):
     try:
-        user_id = get_jwt_identity().get("user")
         search = request.args.get('search', '')
         sort = request.args.get('sort', 'fec_inicio')
         
@@ -72,24 +77,35 @@ def get_appointments():
         print(f"Unexpected error: {str(e)}")
         return jsonify({"error": "Unexpected error occurred"}), 500
 
-@appoint_bp.route('/api/appointments/<int:appointment_id>', methods=['DELETE'])
-@jwt_required()
-def delete_appointment(appointment_id):
+def delete_appointment(user_id):
     try:
-        user_id = get_jwt_identity().get("user")  # Obtener el RUT del usuario desde JWT
+        data = request.json
+        appointment_id = data.get('id')
+
+        if not appointment_id:
+            return jsonify({"error": "Appointment ID is required"}), 400
+
+        print(f"Deleting appointment - user_id: {user_id}, appointment_id: {appointment_id}")
+
         query = text("""
             DELETE FROM Reserva
             WHERE cod_reserva = :appointment_id AND rut_paciente = :rut_paciente
         """)
+        
         with engine.connect() as connection:
             result = connection.execute(query, {"appointment_id": appointment_id, "rut_paciente": user_id})
             connection.commit()
 
             if result.rowcount == 0:
+                print(f"Appointment not found or unauthorized - appointment_id: {appointment_id}, user_id: {user_id}")
                 return jsonify({"error": "Appointment not found or unauthorized"}), 404
 
+        print(f"Appointment deleted successfully - appointment_id: {appointment_id}")
         return jsonify({"message": "Appointment deleted successfully"}), 200
 
     except SQLAlchemyError as e:
         print(f"Database error: {str(e)}")
         return jsonify({"error": "Database error"}), 500
+    except Exception as e:
+        print(f"Unexpected error: {str(e)}")
+        return jsonify({"error": "Unexpected error occurred"}), 500

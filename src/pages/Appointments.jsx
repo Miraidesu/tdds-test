@@ -30,10 +30,10 @@ export default function Appointments() {
       if (response.ok) {
         const data = await response.json();
         console.log("Received credentials:", data);
-        if (data.user_type === 1 && data.token) {
+        if (data.user_type === 1) {
           setUserValid(true);
         } else {
-          console.log("Invalid user type or missing token, redirecting to home");
+          console.log("Invalid user type, redirecting to home");
           navigate("/");
         }
       } else {
@@ -96,13 +96,8 @@ export default function Appointments() {
   }, [searchTerm, sortBy, navigate, userValid]);
 
   useEffect(() => {
-    console.log("useEffect for fetchAppointments triggered");
-    console.log("User valid:", userValid);
     if (userValid) {
-      console.log("User valid, fetching appointments");
       fetchAppointments();
-    } else {
-      console.log("User not valid, skipping fetchAppointments");
     }
   }, [userValid, fetchAppointments]);
 
@@ -116,8 +111,11 @@ export default function Appointments() {
 
   const handleDelete = async (appointmentId) => {
     try {
+      console.log("Deleting appointment...");
+      console.log("Appointment ID:", appointmentId);
+
       const response = await fetch(
-        `http://localhost:5000/api/appointments/${appointmentId}`,
+        `http://localhost:5000/api/appointments`,
         {
           method: "DELETE",
           headers: {
@@ -126,10 +124,24 @@ export default function Appointments() {
           credentials: "include",
         }
       );
+
+      console.log("Response status:", response.status);
+
+      if (response.status === 401) {
+        console.error("Unauthorized: Please log in again.");
+        navigate("/");
+        return;
+      }
+
+      const data = await response.json();
+
       if (response.ok) {
+        console.log("Appointment deleted successfully");
         setAppointments((prev) => prev.filter((appt) => appt.id !== appointmentId));
+      } else if (response.status === 404) {
+        console.error("Appointment not found");
       } else {
-        console.error("Error deleting appointment");
+        console.error("Server error:", data.message || "Failed to delete appointment");
       }
     } catch (error) {
       console.error("Error deleting appointment:", error);
@@ -140,6 +152,10 @@ export default function Appointments() {
     const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
     return new Date(dateString).toLocaleDateString('es-ES', options);
   };
+
+  if (!userValid) {
+    return <div>Cargando...</div>;
+  }
 
   return (
     <div className="container mx-auto p-4 max-w-2xl">
