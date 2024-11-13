@@ -1,5 +1,6 @@
 import os
 from flask import Blueprint, request, jsonify
+from flask_jwt_extended import jwt_required
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import SQLAlchemyError
 from dotenv import load_dotenv
@@ -92,3 +93,20 @@ def get_horarios(rut):
         print(f"Error al obtener los horarios: {e}")
         return jsonify({"message": "Ocurrió un error al obtener los horarios"}), 500
     
+@schedule_bp.route('/api/userSchedule/citas', methods=['GET'])
+@jwt_required(locations=["cookies"]) 
+def get_citas():
+    try:
+        with engine.connect() as conn:
+            query = text("""
+                SELECT r.rut_paciente, r.rut_medico, r.especialidad, r.fec_inicio, r.fec_termino, u.nombre || ' ' || u.apellido AS nombre_completo
+                FROM Reserva r
+                JOIN Usuario u ON r.rut_medico = u.Rut
+            """)
+            result = conn.execute(query).fetchall()
+            citas = [{"rutPaciente": row[0], "rutMedico": row[1], "especialidad": row[2], "fechaInicio": row[3], "fechaTermino": row[4], "nombreCompleto": row[5]} for row in result]
+        return jsonify(citas)
+
+    except SQLAlchemyError as e:
+        print(f"Error al obtener las citas: {e}")
+        return jsonify({"message": "Ocurrió un error al obtener las citas"}), 500
