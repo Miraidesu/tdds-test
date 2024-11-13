@@ -172,6 +172,7 @@ def login():
 @jwt_required(locations=["cookies"]) 
 def get_credentials():
     current_user = get_jwt_identity()
+    print(current_user)
     return jsonify(current_user), 200
 
 @auth_bp.route("/logout", methods=["POST"])
