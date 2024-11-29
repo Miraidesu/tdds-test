@@ -138,6 +138,16 @@ export default function NavBar() {
                 </NavigationMenuLink>
               </NavigationMenuItem>
             )}
+
+          {userRole === 5 && (
+              <>
+                <NavigationMenuItem>
+                  <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                    <Link to="/crearPerfiles">Perfiles</Link>
+                  </NavigationMenuLink>
+                </NavigationMenuItem>
+              </>
+            )}
           </NavigationMenuList>
         </NavigationMenu>
       </header>
