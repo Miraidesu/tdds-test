@@ -25,7 +25,7 @@ def manage_profiles():
                 roles_list = []
                 for row in conn.execute(roles_query):
                     roles_list.append({"value": row.value, "label": row.label})
-                print("Roles list:", roles_list)  # Agregar log
+                
 
                 profiles_query = text("SELECT Rut, nombre, apellido, email, (SELECT tipo_user FROM Tipo_usuario WHERE cod_tipo_user=Usuario.cod_tipo_user) AS role, telefono FROM Usuario WHERE cod_tipo_user <> 1")
                 profiles_list = []
@@ -38,7 +38,7 @@ def manage_profiles():
                         "phone": row.telefono,
                         "role": row.role
                     })
-                print("Profiles list:", profiles_list)  # Agregar log
+                # print("Profiles list:", profiles_list)  # Agregar log
             return jsonify({"roles_list": roles_list, "profiles_list": profiles_list}), 200
 
         except SQLAlchemyError as e:
@@ -51,32 +51,35 @@ def manage_profiles():
         try:
             with engine.connect() as conn:
                 insert_query = text("""
-                    INSERT INTO Usuario (Rut, digito_verificador, nombre, apellido, email, password, cod_tipo_user)
-                    VALUES (:rut, :digito_verificador, :nombre, :apellido, :email, :password, :role)
+                    INSERT INTO Usuario (Rut, nombre, apellido, email, password, cod_tipo_user, telefono, confirmado)
+                    VALUES (:rut, :nombre, :apellido, :email, :password, :role, :telefono, :confirmado)
                 """)
                 hashed_password = bcrypt.hashpw(data["password"].encode("utf-8"), bcrypt.gensalt())
                 conn.execute(insert_query, {
-                    "rut": data["rut"],
-                    "digito_verificador": data["dv"],
+                    "rut": data["rutNum"],
                     "nombre": data["name"],
                     "apellido": data["lastname"],
                     "email": data["email"],
                     "password": hashed_password.decode("utf-8"),
-                    "role": data["role"]
+                    "role": data["role"],
+                    "telefono": data["phone"],
+                    "confirmado" : True
                 })
+                conn.commit()
 
             return jsonify({"message": "Perfil creado exitosamente"}), 201
 
         except SQLAlchemyError as e:
-            return jsonify({"message": "Error al crear perfil", "error": str(e)}), 500
+            return jsonify({"message": "Error al crear perfil" + str(e), "error": str(e)}), 500
 
     # PUT: Actualizar un perfil existente
     elif request.method == "PUT":
         data = request.json
+        # password_hashed = bcrypt.hashpw(data["password"].encode("utf-8"), bcrypt.gensalt())
         try:
             with engine.connect() as conn:
                 update_query = text("""
-                    UPDATE Usuario SET nombre = :nombre, apellido = :apellido, email = :email, telefono = :telefono
+                    UPDATE Usuario SET nombre = :nombre, apellido = :apellido, email = :email, telefono = :telefono, cod_tipo_user = :role
                     WHERE Rut = :rut
                 """)
                 result = conn.execute(update_query, {
@@ -84,11 +87,14 @@ def manage_profiles():
                     "apellido": data["lastname"],
                     "email": data["email"],
                     "telefono": data["phone"],
-                    "rut": data["rut"]
+                    "rut": data["rutNum"],
+                    "role" : int(data["role"])
                 })
 
                 if result.rowcount == 0:
                     return jsonify({"message": "Perfil no se ha encontrado"}), 404
+                
+                conn.commit()
 
             return jsonify({"message": "Perfil actualizado correctamente"}), 200
 
@@ -105,8 +111,40 @@ def manage_profiles():
 
                 if result.rowcount == 0:
                     return jsonify({"message": "Perfil no encontrado"}), 404
+                
+                conn.commit()
 
             return jsonify({"message": "Perfil eliminado correctamente"}), 200
 
         except SQLAlchemyError as e:
             return jsonify({"message": "Error al eliminar perfil", "error": str(e)}), 500
+        
+
+
+@profiles_bp.route('/api/updatePassword', methods=['POST'])
+def update_password():
+    if request.method == "POST":
+
+        data = request.json
+        password_hashed = bcrypt.hashpw(data["password"].encode("utf-8"), bcrypt.gensalt())
+        print
+        try:
+            with engine.connect() as conn:
+                update_query = text("""
+                    UPDATE Usuario SET password = :password
+                    WHERE Rut = :rut
+                """)
+                result = conn.execute(update_query, {
+                    "password": password_hashed.decode("utf-8"),
+                    "rut": data["rutNum"],
+                })
+
+                if result.rowcount == 0:
+                    return jsonify({"message": "Perfil no se ha encontrado"}), 404
+                
+                conn.commit()
+
+            return jsonify({"message": "Contraseña actualizada correctamente"}), 200
+
+        except SQLAlchemyError as e:
+            return jsonify({"message": "Error al actualizar la contraseña", "error": str(e)}), 500
