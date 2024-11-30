@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { format, subYears } from "date-fns";
+import { format, set, subYears } from "date-fns";
 import ErrorMsg from "@/components/error-msg";
 import { Eye, EyeOff } from "lucide-react";
 import {
@@ -41,6 +41,7 @@ export default function CreateProfile() {
   const [isPassDialogOpen, setIsPassDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [rolesList, setRolesList] = useState([]);
+  const [specialtiesList, setSpecialtiesList] = useState([]);
   var dig = "";
 
   const {
@@ -68,6 +69,7 @@ export default function CreateProfile() {
   } = useForm();
 
   const [selectedRole, setSelectedRole] = useState("");
+  const [selectedSpecialty, setSelectedSpecialty] = useState("");
 
   function calcularDV(rut) {
     let suma = 0;
@@ -90,14 +92,26 @@ export default function CreateProfile() {
   const onSubmit = async (data) => {
     data.phone = Number(data.phone);
     data.rutNum = Number(data.rutNum);
+
+    if (selectedSpecialty == null){
+      data.specialty = null;
+    }
   
     
-    const dig = calcularDV(data.rutNum.toString().trim()); 
+    const dig = calcularDV(data.rutNum.toString().padStart(8, '0').trim()); 
     const inputDV = data.rutDig.toString().trim().toUpperCase(); 
     
     if (!data.role) {
       alert("Seleccione un rol")
+      return;
     };
+
+    if (data.role == 2 && data.specialty == null) {
+      alert("Seleccione una especialidad");
+     return;
+    }
+
+    
 
     if (dig === inputDV) {
       try {
@@ -126,6 +140,9 @@ export default function CreateProfile() {
     } else {
       alert("El RUT ingresado no es válido");
     }
+
+    setSelectedRole(null);
+    setSelectedSpecialty(null);
   };
 
 // PARA EDITAR PERFILES
@@ -134,8 +151,15 @@ export default function CreateProfile() {
     data.phone = Number(data.phone);
     data.rutNum = Number(data.rutNum);
 
+    data.specialty = selectedSpecialty;
+    
+
   
     if (data.role) {
+      if (data.role == 2 && data.specialty == null) {
+        alert("Seleccione una especialidad");
+       return;
+      }
       try {
         const response = await fetch("http://localhost:5000/api/createProfiles", {
           method: "PUT",
@@ -150,6 +174,8 @@ export default function CreateProfile() {
           alert(result.message);
           fetchData(); 
           setIsEditDialogOpen(false);
+          setSelectedRole(null);
+          setSelectedSpecialty(null);
         } else {
           const result = await response.json();
           alert(result.message);
@@ -162,6 +188,9 @@ export default function CreateProfile() {
       alert("Seleccione un rol")
     }
     
+    setSelectedRole(null);
+    setSelectedSpecialty(null);
+
   };
 
   // PARA ELIMINAR PERFILES
@@ -190,6 +219,7 @@ export default function CreateProfile() {
         } else {
           const result = await response.json();
           alert(result.message);
+          alert(result.error);
           console.error("Error al eliminar", result.message);
         }
       } catch (error) {
@@ -245,6 +275,7 @@ export default function CreateProfile() {
       const data = await response.json();
       setRolesList(data.roles_list);
       setProfiles(data.profiles_list);
+      setSpecialtiesList(data.specialties_list);
     } catch (error) {
       console.error("Error al obtener perfiles:", error);
     }
@@ -256,32 +287,64 @@ export default function CreateProfile() {
 
   const handleRole = (role) => {
     const selectedRole = rolesList.find((r) => r.label === role);
+  
     setSelectedRole(selectedRole.value);
     setValue("role", selectedRole.value);
+  
+    if (selectedRole.value !== 2) {
+      setSelectedSpecialty(null); // Limpia la especialidad si no es "Médico"
+    }
   };
+  
 
   const handleRoleForEdit = (role) => {
     const selectedRole = rolesList.find((r) => r.label === role);
+  
     setSelectedRole(selectedRole.value);
     setValueEdit("role", selectedRole.value);
+  
+    if (selectedRole.value !== 2) {
+      setSelectedSpecialty(null); // Limpia la especialidad si no es "Médico"
+    }
   };
 
+  const handleSpecialty = (specialty) => {
+    const selectedSpecialty = specialtiesList.find((s) => s.label === specialty);
+    setSelectedSpecialty(selectedSpecialty.value);
+    setValue("specialty", selectedSpecialty.value);
+  };
 
+  const handleSpecialtyForEdit = (specialty) => {
+    const selectedSpecialty = specialtiesList.find((s) => s.label === specialty);
+    setSelectedSpecialty(selectedSpecialty.value);
+    setValue("specialty", selectedSpecialty.value);
+  };
+
+  useEffect(() => {
+    if (isEditDialogOpen) {
+      setSelectedRole(null);
+      setSelectedSpecialty(null);
+    }
+  }, [isEditDialogOpen]);
 
   const changePassword = (profile) => {
+
+    setValuePass("password", "");
+    setValuePass("passwordConfirm", "");
+
     setValuePass("rutNum", profile.rut);
-    setValuePass("rutDig", calcularDV(Number(profile.rut)));
+    setValuePass("rutDig", calcularDV(profile.rut.toString().padStart(8, '0')));
     setIsPassDialogOpen(true);
     };
 
   const EditProfile = (profile) => {
     setValueEdit("rutNum", profile.rut);
-    setValueEdit("rutDig", calcularDV(Number(profile.rut)));
+    setValueEdit("rutDig", calcularDV(profile.rut.toString().padStart(8, '0')));
     setValueEdit("name", profile.name);
     setValueEdit("lastname", profile.lastname);
     setValueEdit("email", profile.email);
     setValueEdit("phone", profile.phone);
-    // setValue("role", profile.role);
+    setSelectedRole(null);
     setIsEditDialogOpen(true);
   };
 
@@ -388,6 +451,25 @@ export default function CreateProfile() {
                 </Select>
                 {errors.role && <ErrorMsg>{errors.role.message}</ErrorMsg>}
               </div>
+              {/* Select para especialidades (solo se muestra si el rol es Médico) */}
+                {selectedRole === 2 && (
+                  <div>
+                    <Label>Especialidad</Label>
+                    <Select id="specialty" onValueChange={handleSpecialty} >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecciona una especialidad" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {specialtiesList.map((specialty) => (
+                          <SelectItem key={specialty.value} value={specialty.label}>
+                            {specialty.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                
               <Button type="submit">Crear</Button>
             </form>
           </DialogContent>
@@ -424,7 +506,10 @@ export default function CreateProfile() {
               <TableCell>{profile.name}</TableCell>
               <TableCell>{profile.lastname}</TableCell>
               <TableCell>{profile.email}</TableCell>
-              <TableCell>{profile.role}</TableCell>
+              {profile.role === "Medico" ? <TableCell>{profile.role} {profile.specialty}</TableCell> :
+                <TableCell>{profile.role}</TableCell>
+              }
+              
               <TableCell>
                 <HoverCard>
                   <HoverCardTrigger>
@@ -563,6 +648,24 @@ export default function CreateProfile() {
                 </Select>
                 {errors.role && <ErrorMsg>{errors.role.message}</ErrorMsg>}
               </div>
+              {/* Select para especialidades (solo se muestra si el rol es Médico) */}
+              {selectedRole === 2 && (
+                  <div>
+                    <Label>Especialidad</Label>
+                    <Select id="specialty" onValueChange={handleSpecialtyForEdit} >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecciona una especialidad" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {specialtiesList.map((specialty) => (
+                          <SelectItem key={specialty.value} value={specialty.label}>
+                            {specialty.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
               <Button type="submit">Editar</Button>
             </form>
           </DialogContent>
@@ -604,6 +707,7 @@ export default function CreateProfile() {
                   type="password"
                   id="password"
                   placeholder="Contraseña"
+                  defaultValue=""
                   {...registerPass("password", { required: "La contraseña es obligatoria" })}
                 />
                 {errors.password && <ErrorMsg>{errors.password.message}</ErrorMsg>}
@@ -614,6 +718,7 @@ export default function CreateProfile() {
                   type="password"
                   id="passwordConfirm"
                   placeholder="Confirmar Contraseña"
+                  defaultValue=""
                   {...registerPass("passwordConfirm", { required: "Confirme su contraseña" })}
                 />
                 {errors.passwordConfirm && <ErrorMsg>{errors.passwordConfirm.message}</ErrorMsg>}
