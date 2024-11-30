@@ -1,8 +1,9 @@
 import os
+from tarfile import NUL
 import bcrypt
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import get_jwt_identity, jwt_required
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, null, text
 from sqlalchemy.exc import SQLAlchemyError
 from dotenv import load_dotenv
 
@@ -19,6 +20,7 @@ profiles_bp = Blueprint('profiles_bp', __name__)
 def manage_profiles():
     # GET: Obtener la lista de roles y perfiles
     if request.method == "GET":
+        
         try:
             with engine.connect() as conn:
                 roles_query = text("SELECT cod_tipo_user AS value, tipo_user AS label FROM Tipo_usuario WHERE cod_tipo_user <> 1" )
@@ -27,7 +29,11 @@ def manage_profiles():
                     roles_list.append({"value": row.value, "label": row.label})
                 
 
-                profiles_query = text("SELECT Rut, nombre, apellido, email, (SELECT tipo_user FROM Tipo_usuario WHERE cod_tipo_user=Usuario.cod_tipo_user) AS role, telefono FROM Usuario WHERE cod_tipo_user <> 1")
+                profiles_query = text("""SELECT Rut, nombre, apellido, email, 
+                                            (SELECT tipo_user FROM Tipo_usuario WHERE cod_tipo_user = Usuario.cod_tipo_user) AS role, 
+                                            (SELECT nom_esp FROM Especialidad WHERE cod_esp = Usuario.cod_esp) AS especialidad, 
+                                            telefono 
+                                        FROM Usuario WHERE cod_tipo_user <> 1;""")
                 profiles_list = []
                 for row in conn.execute(profiles_query):
                     profiles_list.append({
@@ -36,10 +42,19 @@ def manage_profiles():
                         "lastname": row.apellido,
                         "email": row.email,
                         "phone": row.telefono,
-                        "role": row.role
+                        "role": row.role,
+                        "specialty": row.especialidad
                     })
+
+                specialties = text("SELECT cod_esp AS value, nom_esp AS label FROM Especialidad")
+                specialties_list = []
+                for row in conn.execute(specialties):
+                    specialties_list.append({"value": row.value, "label": row.label})
+                
+
+
                 # print("Profiles list:", profiles_list)  # Agregar log
-            return jsonify({"roles_list": roles_list, "profiles_list": profiles_list}), 200
+            return jsonify({"roles_list": roles_list, "profiles_list": profiles_list, "specialties_list" : specialties_list}), 200
 
         except SQLAlchemyError as e:
             print("Error al obtener perfiles:", e)
@@ -48,11 +63,14 @@ def manage_profiles():
     # POST: Añadir un nuevo perfil
     elif request.method == "POST":
         data = request.json
+        print(data["specialty"])
+        if data["specialty"] == null:
+            data["specialty"] = null
         try:
             with engine.connect() as conn:
                 insert_query = text("""
-                    INSERT INTO Usuario (Rut, nombre, apellido, email, password, cod_tipo_user, telefono, confirmado)
-                    VALUES (:rut, :nombre, :apellido, :email, :password, :role, :telefono, :confirmado)
+                    INSERT INTO Usuario (Rut, nombre, apellido, email, password, cod_tipo_user, telefono, confirmado, cod_esp)
+                    VALUES (:rut, :nombre, :apellido, :email, :password, :role, :telefono, :confirmado, :cod_esp)
                 """)
                 hashed_password = bcrypt.hashpw(data["password"].encode("utf-8"), bcrypt.gensalt())
                 conn.execute(insert_query, {
@@ -63,7 +81,8 @@ def manage_profiles():
                     "password": hashed_password.decode("utf-8"),
                     "role": data["role"],
                     "telefono": data["phone"],
-                    "confirmado" : True
+                    "confirmado" : True,
+                    "cod_esp" : data["specialty"]
                 })
                 conn.commit()
 
@@ -75,11 +94,12 @@ def manage_profiles():
     # PUT: Actualizar un perfil existente
     elif request.method == "PUT":
         data = request.json
+
         # password_hashed = bcrypt.hashpw(data["password"].encode("utf-8"), bcrypt.gensalt())
         try:
             with engine.connect() as conn:
                 update_query = text("""
-                    UPDATE Usuario SET nombre = :nombre, apellido = :apellido, email = :email, telefono = :telefono, cod_tipo_user = :role
+                    UPDATE Usuario SET nombre = :nombre, apellido = :apellido, email = :email, telefono = :telefono, cod_tipo_user = :role, cod_esp = :specialty
                     WHERE Rut = :rut
                 """)
                 result = conn.execute(update_query, {
@@ -88,7 +108,8 @@ def manage_profiles():
                     "email": data["email"],
                     "telefono": data["phone"],
                     "rut": data["rutNum"],
-                    "role" : int(data["role"])
+                    "role" : int(data["role"]),
+                    "specialty" : data["specialty"]
                 })
 
                 if result.rowcount == 0:
